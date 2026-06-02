@@ -4,27 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="config.js"></script>
-    <title>nullpo news</title>
+    <title>nullpo news - フル機能ポータル</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 0; }
         nav { background: #0052a3; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .logo { font-size: 20px; font-weight: bold; cursor: pointer; }
         .nav-right { display: flex; align-items: center; gap: 15px; }
         .search-box { padding: 6px 12px; border-radius: 20px; border: none; outline: none; font-size: 14px; width: 180px; }
+        
         .profile-switcher { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.18); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); }
         .profile-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #fff; cursor: pointer; }
         select { background: transparent; color: white; border: none; font-size: 14px; font-weight: bold; cursor: pointer; outline: none; }
         select option { color: #333; }
+        
+        .btn-logout { background: rgba(255,255,255,0.2); color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .btn-logout:hover { background: rgba(255,255,255,0.3); }
+        .btn-login-trigger { background: #ffcc00; color: #333; border: none; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .btn-login-trigger:hover { background: #ffa600; }
+
         .main-container { max-width: 750px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 20px; }
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .panel h3 { margin-top: 0; font-size: 16px; color: #444; border-bottom: 2px solid #eef2f5; padding-bottom: 8px; }
         .flex-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
         input[type="text"], textarea { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        
         .btn { background: #0052a3; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-success { background: #28a745; }
         .btn-success:hover { background: #218838; }
         .btn-danger { background: #cc0000; padding: 4px 8px; font-size: 12px; border-radius: 4px; color: white; border: none; cursor: pointer; }
         .btn-secondary { background: #666; font-size: 12px; padding: 4px 8px; border-radius: 4px; color: white; border: none; cursor: pointer; }
+        
         .article-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .article-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .header-left { display: flex; align-items: center; gap: 12px; }
@@ -32,15 +41,21 @@
         .article-title { font-size: 20px; font-weight: bold; margin: 0 0 10px 0; color: #111; }
         .article-content { font-size: 15px; line-height: 1.6; color: #444; white-space: pre-wrap; margin-bottom: 15px; }
         .tag { background: #e1ecf4; color: #39739d; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; display: inline-block; }
+        
         .comment-section { margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
         .comment-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
         .comment { background: #f6f8fa; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
         .comment-user { font-weight: bold; color: #0052a3; margin-right: 8px; }
         .comment-input-group { display: flex; gap: 8px; }
+        
         .view-tabs { display: flex; gap: 15px; margin-bottom: -10px; font-weight: bold; font-size: 14px; }
         .v-tab { cursor: pointer; color: #666; padding-bottom: 5px; border-bottom: 2px solid transparent; }
         .v-tab.active { color: #0052a3; border-bottom: 2px solid #0052a3; }
         .divider { border-top: 1px dashed #ddd; margin: 15px 0; }
+        
+        .guest-welcome-panel { background: linear-gradient(135deg, #0052a3, #0077cc); color: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .guest-welcome-panel h2 { margin-top: 0; font-size: 22px; }
+        .guest-welcome-panel p { font-size: 14px; margin-bottom: 20px; opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -49,14 +64,25 @@
         <div class="logo" onclick="clearFilter()">nullpo news 📰</div>
         <div class="nav-right">
             <input type="text" id="search-input" class="search-box" placeholder="キーワード・タグ検索..." oninput="searchNews()">
-            <div class="profile-switcher">
+            
+            <div id="nav-user-zone" class="profile-switcher" style="display:none;">
                 <img id="current-icon" class="profile-icon" src="" alt="icon" onclick="toggleProfilePanel()">
                 <select id="identity-select" onchange="changeIdentity()"></select>
             </div>
+            <button id="btn-logout" class="btn-logout" style="display:none;" onclick="handleLogout()">ログアウト</button>
+
+            <button id="btn-login-trigger" class="btn-login-trigger" style="display:none;" onclick="goToLogin()">新規登録 / ログイン</button>
         </div>
     </nav>
 
     <div class="main-container">
+        
+        <div id="guest-panel" class="guest-welcome-panel" style="display:none;">
+            <h2>👋 架空世界ポータルサイトへようこそ！</h2>
+            <p>nullpo newsでは、架空のインフラ鉄道・航空会社などのプレスリリースやニュースを配信しています。<br>新しく記事を投稿したり、自作の企業名義で配信するにはアカウントの申請登録が必要です。</p>
+            <button class="btn-login-trigger" style="background: white; color: #0052a3; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="goToLogin()">アカウント新規登録・ログイン画面へ</button>
+        </div>
+
         <div id="profile-panel" class="panel" style="display:none;">
             <h3>👤 プロフィール編集</h3>
             <div class="flex-inputs">
@@ -75,7 +101,7 @@
             <button class="btn btn-success" style="padding: 6px 12px; font-size:13px;" onclick="createNewCompany()">承認なしで企業を即時設立する</button>
         </div>
 
-        <div class="panel">
+        <div id="post-panel" class="panel" style="display:none;">
             <h3 id="post-box-title">👤 ニュースを配信する</h3>
             <input type="text" id="art-title" placeholder="記事のタイトル" style="width:100%; margin-bottom:10px;">
             <textarea id="art-content" placeholder="ニュース本文... (HTMLタグ使用可能！赤くて太くておっきい文字もOK！)" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
@@ -86,30 +112,76 @@
 
         <div class="view-tabs">
             <div id="tab-all" class="v-tab active" onclick="switchView('all')">すべてのニュース</div>
-            <div id="tab-follow" class="v-tab" onclick="switchView('follow')">フォロー中</div>
+            <div id="tab-follow" class="v-tab" onclick="switchView('follow')" style="display:none;">フォロー中</div>
         </div>
 
         <div id="feed-container"></div>
     </div>
 
 <script>
-    let myUserId = localStorage.getItem("loginUser") || "tomidare1234"; 
+    // index.htmlのログイン処理と完全に同期させる
+    let myUserId = localStorage.getItem("loginUser"); 
     let myFollowing = [];
+    let isGuest = !myUserId; 
+
+    let userProfiles = [];
     
-    let userProfiles = [
-        { id: myUserId, name: myUserId, icon: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", isCompany: false }
-    ];
-    let currentActiveProfile = userProfiles[0];
+    // ★バグ修正：ログインしている場合のみ、動的にログインIDを配列に注入する
+    if (!isGuest) {
+        userProfiles.push({ 
+            id: myUserId, 
+            name: myUserId, 
+            icon: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", 
+            isCompany: false 
+        });
+    }
+    
+    // プロファイルの初期参照も動的に割り当て
+    let currentActiveProfile = userProfiles.length > 0 ? userProfiles[0] : null;
     let currentViewMode = "all";
     let searchWord = "";
     let articles = [];
 
     window.onload = function() {
-        renderIdentitySelect();
+        checkLoginStatus();
         renderFeed();
     };
 
+    function checkLoginStatus() {
+        if (isGuest) {
+            document.getElementById("guest-panel").style.display = "block";
+            document.getElementById("btn-login-trigger").style.display = "block";
+            
+            document.getElementById("nav-user-zone").style.display = "none";
+            document.getElementById("btn-logout").style.display = "none";
+            document.getElementById("post-panel").style.display = "none";
+            document.getElementById("tab-follow").style.display = "none";
+        } else {
+            document.getElementById("guest-panel").style.display = "none";
+            document.getElementById("btn-login-trigger").style.display = "none";
+            
+            document.getElementById("nav-user-zone").style.display = "flex";
+            document.getElementById("btn-logout").style.display = "block";
+            document.getElementById("post-panel").style.display = "block";
+            document.getElementById("tab-follow").style.display = "block";
+            
+            renderIdentitySelect();
+        }
+    }
+
+    function handleLogout() {
+        if(!confirm("ログアウトしますか？")) return;
+        localStorage.removeItem("loginUser"); 
+        alert("ログアウトしました。ゲストモードに切り替えます。");
+        window.location.reload(); 
+    }
+
+    function goToLogin() {
+        window.location.href = "index.html";
+    }
+
     function renderIdentitySelect() {
+        if (isGuest || userProfiles.length === 0) return;
         const select = document.getElementById("identity-select");
         select.innerHTML = "";
         userProfiles.forEach((prof, index) => {
@@ -122,6 +194,7 @@
     }
 
     function changeIdentity() {
+        if (isGuest || !currentActiveProfile) return;
         const idx = document.getElementById("identity-select").value;
         currentActiveProfile = userProfiles[idx];
         updateNavbarIcon();
@@ -132,16 +205,19 @@
     }
 
     function updateNavbarIcon() {
+        if (isGuest || !currentActiveProfile) return;
         document.getElementById("current-icon").src = currentActiveProfile.icon;
     }
 
     function toggleProfilePanel() {
+        if (isGuest) return;
         const p = document.getElementById("profile-panel");
         p.style.display = p.style.display === "none" ? "block" : "none";
         changeIdentity();
     }
 
     async function saveProfile() {
+        if (isGuest || !currentActiveProfile) return;
         const newName = document.getElementById("edit-name").value.trim();
         const newIcon = document.getElementById("edit-icon").value.trim();
         if(!newName || !newIcon) return alert("入力してください。");
@@ -169,8 +245,8 @@
         renderFeed();
     }
 
-    // 🏢 承認不要！その場で即座に企業アカウントを有効化する
     async function createNewCompany() {
+        if (isGuest) return;
         const compName = document.getElementById("new-comp-name").value.trim();
         let compIcon = document.getElementById("new-comp-icon").value.trim();
         
@@ -179,21 +255,14 @@
 
         const compId = "corp_" + new Date().getTime();
 
-        // 1. フロント側の名義一覧に承認なしで即時ガッチャンコ！
-        userProfiles.push({
-            id: compId,
-            name: compName,
-            icon: compIcon,
-            isCompany: true
-        });
+        userProfiles.push({ id: compId, name: compName, icon: compIcon, isCompany: true });
 
-        // 2. スプシ側にも管理者承認をスルーして直接登録の通信を送る
         try {
             await fetch(GAS_URL, {
                 method: "POST",
                 mode: "no-cors",
                 body: JSON.stringify({
-                    action: "updateProfile", // companiesシートへ直接書き込ませる
+                    action: "updateProfile",
                     id: compId,
                     name: compName,
                     iconUrl: compIcon,
@@ -211,6 +280,7 @@
     }
 
     function publishNews() {
+        if (isGuest || !currentActiveProfile) return;
         const title = document.getElementById("art-title").value.trim();
         const content = document.getElementById("art-content").value.trim();
         const tagsString = document.getElementById("art-tags").value;
@@ -236,12 +306,14 @@
     }
 
     function deleteArticle(artId) {
+        if(isGuest || !currentActiveProfile) return;
         if(!confirm("削除しますか？")) return;
         articles = articles.filter(art => art.id !== artId);
         renderFeed();
     }
 
     function addComment(artId) {
+        if(isGuest || !currentActiveProfile) return alert("コメントするにはログインが必要です。");
         const input = document.getElementById(`comment-in-${artId}`);
         const text = input.value.trim();
         if(!text) return;
@@ -252,6 +324,7 @@
     }
 
     function switchView(mode) {
+        if(isGuest && mode === "follow") return;
         currentViewMode = mode;
         document.getElementById("tab-all").classList.toggle("active", mode === "all");
         document.getElementById("tab-follow").classList.toggle("active", mode === "follow");
@@ -280,7 +353,7 @@
         container.innerHTML = "";
         let filtered = articles;
 
-        if (currentViewMode === "follow") {
+        if (currentViewMode === "follow" && !isGuest) {
             filtered = filtered.filter(art => myFollowing.includes(art.authorId));
         }
         if (searchWord) {
@@ -298,11 +371,21 @@
         filtered.forEach(art => {
             const card = document.createElement("div");
             card.className = "article-card";
+            
             const isFollowing = myFollowing.includes(art.authorId);
-            const followBtn = (art.authorId !== myUserId && !userProfiles.some(p => p.id === art.authorId)) ? `<button class="btn-secondary" onclick="toggleFollowUser('${art.authorId}')">${isFollowing ? '✓ フォロー中' : '＋ フォロー'}</button>` : '';
-            const deleteBtn = (art.authorId === currentActiveProfile.id || currentActiveProfile.id === "tomidare1234") ? `<button class="btn-danger" onclick="deleteArticle('${art.id}')">削除</button>` : '';
+            const followBtn = (!isGuest && art.authorId !== myUserId && !userProfiles.some(p => p.id === art.authorId)) ? `<button class="btn-secondary" onclick="toggleFollowUser('${art.authorId}')">${isFollowing ? '✓ フォロー中' : '＋ フォロー'}</button>` : '';
+            
+            const deleteBtn = (!isGuest && currentActiveProfile && (art.authorId === currentActiveProfile.id || myUserId === "tomidare1234")) ? `<button class="btn-danger" onclick="deleteArticle('${art.id}')">削除</button>` : '';
+            
             const tagsHtml = art.tags.map(t => `<span class="tag" onclick="clickTag('${t}')">#${t}</span>`).join("");
             const commentsHtml = art.comments.map(c => `<div class="comment"><span class="comment-user">${c.user}:</span><span>${c.text}</span></div>`).join("");
+
+            const commentInputHtml = isGuest 
+                ? `<div style="font-size:12px; color:#888; text-align:center; padding:5px;">💬 コメントするには <a href="#" onclick="goToLogin()" style="color:#0052a3; font-weight:bold;">ログイン</a> が必要です</div>`
+                : `<div class="comment-input-group">
+                        <input type="text" id="comment-in-${art.id}" placeholder="コメント...">
+                        <button class="btn" style="padding:4px 12px; font-size:13px;" onclick="addComment('${art.id}')">送信</button>
+                   </div>`;
 
             card.innerHTML = `
                 <div class="article-header">
@@ -317,10 +400,7 @@
                 <div style="margin-bottom:15px;">${tagsHtml}</div>
                 <div class="comment-section">
                     <div class="comment-list">${commentsHtml}</div>
-                    <div class="comment-input-group">
-                        <input type="text" id="comment-in-${art.id}" placeholder="コメント...">
-                        <button class="btn" style="padding:4px 12px; font-size:13px;" onclick="addComment('${art.id}')">送信</button>
-                    </div>
+                    ${commentInputHtml}
                 </div>
             `;
             container.appendChild(card);
