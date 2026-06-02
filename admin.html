@@ -4,34 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="config.js"></script>
-    <title>nullpo news - 管理者ダッシュボード</title>
+    <title>nullpo news 管理者用ダッシュボード 🛠️</title>
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f7f9; color: #333; margin: 0; padding: 20px; }
-        .admin-container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h1 { color: #cc0000; font-size: 24px; border-bottom: 2px solid #cc0000; padding-bottom: 10px; margin-bottom: 20px; }
-        .refresh-btn { background: #555; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-        .refresh-btn:hover { background: #333; }
-        
-        /* 申請リストのテーブルスタイル */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
-        th { background: #f8f9fa; font-weight: bold; color: #555; }
-        tr:hover { background: #f9f9f9; }
-        
-        .approve-btn { background: #00cc66; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .approve-btn:hover { background: #00994c; }
-        .no-data { text-align: center; color: #999; padding: 30px; font-style: italic; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 30px auto; background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.05); }
+        h1 { color: #cc0000; font-size: 24px; border-bottom: 2px solid #cc0000; padding-bottom: 10px; margin-top: 0; }
+        .subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
+        .btn { background: #555; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn:hover { background: #444; }
+        .btn-approve { background: #0088cc; }
+        .btn-approve:hover { background: #006699; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; color: #555; font-weight: bold; }
+        .error-msg { color: red; text-align: center; padding: 20px; font-weight: bold; }
+        .empty-msg { color: #666; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-<div class="admin-container">
+<div class="container">
     <h1>nullpo news 管理者用ダッシュボード 🛠️</h1>
-    <p>新規ユーザーの参加申請の確認・承認が行えます。</p>
+    <div class="subtitle">新規ユーザーの参加申請の確認・承認が行えます。</div>
     
-    <button class="refresh-btn" onclick="fetchPendingUsers()">🔄 申請一覧を更新する</button>
+    <button class="btn" onclick="loadPendingUsers()">🔄 申請一覧を更新する</button>
 
-    <table>
+    <table id="user-table">
         <thead>
             <tr>
                 <th>希望ユーザーID</th>
@@ -40,80 +38,93 @@
                 <th>操作</th>
             </tr>
         </thead>
-        <tbody id="pending-list">
-            </tbody>
+        <tbody id="user-list-body">
+            <tr>
+                <td colspan="4" style="text-align:center; color:#999;">データを読み込み中...</td>
+            </tr>
+        </tbody>
     </table>
 </div>
 
 <script>
-    // 画面が開いたときに自動で申請リストを読み込む
     window.onload = function() {
-        fetchPendingUsers();
+        loadPendingUsers();
     };
 
-    // 承認待ちユーザー一覧を取得する処理
-    async function fetchPendingUsers() {
-        const tbody = document.getElementById("pending-list");
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">読み込み中...</td></tr>';
+    // 🔄 1. JSONPを使ってCORSを完全スルーしてユーザー一覧を読み込む
+    function loadPendingUsers() {
+        const tbody = document.getElementById("user-list-body");
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">データを読み込み中...</td></tr>';
 
-        try {
-            const response = await fetch(GAS_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: JSON.stringify({ action: "getPending" })
-            });
+        // 古いスクリプトタグがあれば削除
+        const oldScript = document.getElementById("jsonp-script");
+        if (oldScript) oldScript.remove();
 
-            const pendingUsers = await response.json();
-            tbody.innerHTML = ""; // クリア
+        // GASへ送るURLを構築（アクションと、受け取るコールバック関数名を指定）
+        const url = `${GAS_URL}?action=getPending&callback=renderPendingUsers&_=${new Date().getTime()}`;
 
-            if (!pendingUsers || pendingUsers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="no-data">現在、承認待ちの申請はありません。</td></tr>';
-                return;
-            }
+        // <script src="URL"> を動的に作って埋め込むことで、CORSを完全に突破！
+        const script = document.createElement("script");
+        script.id = "jsonp-script";
+        script.src = url;
+        script.onerror = function() {
+            tbody.innerHTML = '<tr><td colspan="4" class="error-msg">データの取得に失敗しました。GASのURLまたはデプロイ状態を確認してください。</td></tr>';
+        };
+        document.body.appendChild(script);
+    }
 
-            pendingUsers.forEach(user => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td style="font-weight:bold;">${user.userId}</td>
-                    <td>${user.email || '<span style="color:#ccc;">未入力</span>'}</td>
-                    <td>${user.comment || '<span style="color:#ccc;">なし</span>'}</td>
-                    <td>
-                        <button class="approve-btn" onclick="processUser('${user.userId}')">承認する</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+    // 📋 2. GASからデータが返ってきたら実行される関数
+    function renderPendingUsers(data) {
+        const tbody = document.getElementById("user-list-body");
+        tbody.innerHTML = "";
 
-        } catch (error) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">データの取得に失敗しました。GASの設定を確認してください。</td></tr>';
-            console.error(error);
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">現在、承認待ちのユーザーはいません。</td></tr>';
+            return;
+        }
+
+        data.forEach(user => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><b>${escapeHtml(user.userId)}</b></td>
+                <td>${escapeHtml(user.email || '---')}</td>
+                <td>${escapeHtml(user.comment || '---')}</td>
+                <td>
+                    <button class="btn btn-approve" onclick="approveUser('${escapeHtml(user.userId)}')">承認する</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 🤝 3. ユーザーを承認する（こちらもJSONP方式で安全に送信）
+    function approveUser(userId) {
+        if (!confirm(`${userId} を承認してもよろしいですか？`)) return;
+
+        const oldScript = document.getElementById("jsonp-script-action");
+        if (oldScript) oldScript.remove();
+
+        const url = `${GAS_URL}?action=approve&userId=${encodeURIComponent(userId)}&callback=onApproveResult&_=${new Date().getTime()}`;
+
+        const script = document.createElement("script");
+        script.id = "jsonp-script-action";
+        script.src = url;
+        document.body.appendChild(script);
+    }
+
+    function onApproveResult(result) {
+        if (result && result.success) {
+            alert(result.message);
+            loadPendingUsers(); // 一覧を再読み込み
+        } else {
+            alert("エラー: " + (result ? result.message : "通信に失敗しました。"));
         }
     }
 
-    // ユーザーを承認する処理
-    async function processUser(userId) {
-        if (!confirm(`${userId} の参加申請を承認しますか？`)) return;
-
-        try {
-            const response = await fetch(GAS_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: JSON.stringify({
-                    action: "approve",
-                    userId: userId
-                })
-            });
-
-            const result = await response.json();
-            alert(result.message);
-            
-            // リストを再読み込み
-            fetchPendingUsers();
-
-        } catch (error) {
-            alert("承認処理中にエラーが発生しました。");
-            console.error(error);
-        }
+    // セキュリティ対策（文字化け・不正コード防止）
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 </script>
 </body>
