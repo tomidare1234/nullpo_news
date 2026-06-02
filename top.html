@@ -9,441 +9,86 @@
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 0; }
         nav { background: #0052a3; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .logo { font-size: 20px; font-weight: bold; cursor: pointer; }
-        .nav-right { display: flex; align-items: center; gap: 15px; }
-        .search-box { padding: 6px 12px; border-radius: 20px; border: none; outline: none; font-size: 14px; width: 180px; }
-        
-        .profile-switcher { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.18); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); }
-        .profile-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #fff; cursor: pointer; }
-        select { background: transparent; color: white; border: none; font-size: 14px; font-weight: bold; cursor: pointer; outline: none; }
-        select option { color: #333; }
-        
-        .btn-logout { background: rgba(255,255,255,0.2); color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
-        .btn-logout:hover { background: rgba(255,255,255,0.3); }
-        .btn-login-trigger { background: #ffcc00; color: #333; border: none; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
-        .btn-login-trigger:hover { background: #ffa600; }
-
         .main-container { max-width: 750px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 20px; }
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .panel h3 { margin-top: 0; font-size: 16px; color: #444; border-bottom: 2px solid #eef2f5; padding-bottom: 8px; }
-        .flex-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
-        input[type="text"], textarea { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        
         .btn { background: #0052a3; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-success { background: #28a745; }
-        .btn-success:hover { background: #218838; }
-        .btn-danger { background: #cc0000; padding: 4px 8px; font-size: 12px; border-radius: 4px; color: white; border: none; cursor: pointer; }
-        .btn-secondary { background: #666; font-size: 12px; padding: 4px 8px; border-radius: 4px; color: white; border: none; cursor: pointer; }
-        
-        .article-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .article-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .author-name { font-weight: bold; color: #333; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-        .article-title { font-size: 20px; font-weight: bold; margin: 0 0 10px 0; color: #111; }
-        .article-content { font-size: 15px; line-height: 1.6; color: #444; white-space: pre-wrap; margin-bottom: 15px; }
-        .tag { background: #e1ecf4; color: #39739d; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; display: inline-block; }
-        
-        .comment-section { margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
-        .comment-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-        .comment { background: #f6f8fa; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
-        .comment-user { font-weight: bold; color: #0052a3; margin-right: 8px; }
-        .comment-input-group { display: flex; gap: 8px; }
-        
-        .view-tabs { display: flex; gap: 15px; margin-bottom: -10px; font-weight: bold; font-size: 14px; }
-        .v-tab { cursor: pointer; color: #666; padding-bottom: 5px; border-bottom: 2px solid transparent; }
-        .v-tab.active { color: #0052a3; border-bottom: 2px solid #0052a3; }
-        .divider { border-top: 1px dashed #ddd; margin: 15px 0; }
-        
-        .guest-welcome-panel { background: linear-gradient(135deg, #0052a3, #0077cc); color: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .guest-welcome-panel h2 { margin-top: 0; font-size: 22px; }
-        .guest-welcome-panel p { font-size: 14px; margin-bottom: 20px; opacity: 0.9; }
+        .article-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .article-title { font-size: 20px; font-weight: bold; margin: 0 0 10px 0; }
+        .article-content { font-size: 15px; line-height: 1.6; color: #444; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="logo" onclick="clearFilter()">nullpo news 📰</div>
-        <div class="nav-right">
-            <input type="text" id="search-input" class="search-box" placeholder="キーワード・タグ検索..." oninput="searchNews()">
-            
-            <div id="nav-user-zone" class="profile-switcher" style="display:none;">
-                <img id="current-icon" class="profile-icon" src="" alt="icon" onclick="toggleProfilePanel()">
-                <select id="identity-select" onchange="changeIdentity()"></select>
-            </div>
-            <button id="btn-logout" class="btn-logout" style="display:none;" onclick="handleLogout()">ログアウト</button>
-
-            <button id="btn-login-trigger" class="btn-login-trigger" style="display:none;" onclick="goToLogin()">新規登録 / ログイン</button>
-        </div>
+        <div class="logo" onclick="window.location.reload()">nullpo news 📰</div>
+        <button id="btn-login" onclick="window.location.href='index.html'">ログイン/登録</button>
     </nav>
 
     <div class="main-container">
-        
-        <div id="guest-panel" class="guest-welcome-panel" style="display:none;">
-            <h2>👋 nullpo newsへようこそ！</h2>
-            <p>nullpo newsでは、様々なプレスリリースやニュースを配信しています。<br>新しく記事を投稿したり、自作の企業名義で配信するにはアカウントの申請登録が必要です。</p>
-            <button class="btn-login-trigger" style="background: white; color: #0052a3; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="goToLogin()">アカウント新規登録・ログイン画面へ</button>
-        </div>
-
-        <div id="profile-panel" class="panel" style="display:none;">
-            <h3>👤 プロフィール編集</h3>
-            <div class="flex-inputs">
-                <input type="text" id="edit-name" placeholder="表示名">
-                <input type="text" id="edit-icon" placeholder="アイコン画像URL">
-            </div>
-            <button class="btn" style="padding: 6px 12px; font-size:13px; margin-bottom: 10px;" onclick="saveProfile()">保存する</button>
-
-            <div class="divider"></div>
-
-            <h3>🏢 新しい企業・組織を設立する</h3>
-            <div class="flex-inputs">
-                <input type="text" id="new-comp-name" placeholder="例: 霧原急行電鉄">
-                <input type="text" id="new-comp-icon" placeholder="企業ロゴの画像URL (任意)">
-            </div>
-            <button class="btn btn-success" style="padding: 6px 12px; font-size:13px;" onclick="createNewCompany()">承認なしで企業を即時設立する</button>
-        </div>
-
         <div id="post-panel" class="panel" style="display:none;">
-            <h3 id="post-box-title">👤 ニュースを配信する</h3>
-            <input type="text" id="art-title" placeholder="記事のタイトル" style="width:100%; margin-bottom:10px;">
-            <textarea id="art-content" placeholder="ニュース本文... (HTMLタグ使用可能！赤くて太くておっきい文字もOK！)" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
-            <input type="text" id="art-tags" placeholder="タグをカンマ区切りで入力 (例: インフラ, 鉄道)" style="width:100%; margin-bottom:10px;">
-            <button class="btn" style="float:right;" onclick="publishNews()">配信する</button>
-            <div style="clear:both;"></div>
+            <h3>ニュースを配信する</h3>
+            <input type="text" id="art-title" placeholder="タイトル" style="width:100%; margin-bottom:10px;">
+            <textarea id="art-content" placeholder="本文" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+            <button class="btn" onclick="publishNews()">配信する</button>
         </div>
 
-        <div class="view-tabs">
-            <div id="tab-all" class="v-tab active" onclick="switchView('all')">すべてのニュース</div>
-            <div id="tab-follow" class="v-tab" onclick="switchView('follow')" style="display:none;">フォロー中</div>
-        </div>
-
-        <div id="feed-container"></div>
+        <div id="feed-container">読み込み中...</div>
     </div>
 
 <script>
-    let myUserId = localStorage.getItem("loginUser"); 
-    let myFollowing = [];
-    let isGuest = !myUserId; 
-
-    let userProfiles = [];
-    
-    if (!isGuest) {
-        userProfiles.push({ 
-            id: myUserId, 
-            name: myUserId, 
-            icon: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", 
-            isCompany: false 
-        });
-    }
-    
-    let currentActiveProfile = userProfiles.length > 0 ? userProfiles[0] : null;
-    let currentViewMode = "all";
-    let searchWord = "";
-    
-    // 💡 ★ニュース記事の配列をローカルストレージから自動で読み込む（無ければ空）
-    let articles = JSON.parse(localStorage.getItem("nullpo_articles")) || [];
+    const myUserId = localStorage.getItem("loginUser");
 
     window.onload = function() {
-        checkLoginStatus();
-        renderFeed();
+        if (myUserId) {
+            document.getElementById("post-panel").style.display = "block";
+            document.getElementById("btn-login").style.display = "none";
+        }
+        fetchArticles();
     };
 
-    // 💡 ★データをローカルストレージへセーブするための共通関数
-    function saveArticlesToStorage() {
-        localStorage.setItem("nullpo_articles", JSON.stringify(articles));
-    }
-
-    function checkLoginStatus() {
-        if (isGuest) {
-            document.getElementById("guest-panel").style.display = "block";
-            document.getElementById("btn-login-trigger").style.display = "block";
-            
-            document.getElementById("nav-user-zone").style.display = "none";
-            document.getElementById("btn-logout").style.display = "none";
-            document.getElementById("post-panel").style.display = "none";
-            document.getElementById("tab-follow").style.display = "none";
-        } else {
-            document.getElementById("guest-panel").style.display = "none";
-            document.getElementById("btn-login-trigger").style.display = "none";
-            
-            document.getElementById("nav-user-zone").style.display = "flex";
-            document.getElementById("btn-logout").style.display = "block";
-            document.getElementById("post-panel").style.display = "block";
-            document.getElementById("tab-follow").style.display = "block";
-            
-            renderIdentitySelect();
+    // 記事の読み込み（GASへリクエスト）
+    async function fetchArticles() {
+        try {
+            // 注意: GAS側で doGet または doPost で記事一覧を返す処理が必要です
+            const response = await fetch(GAS_URL + "?action=getArticles");
+            const articles = await response.json();
+            const container = document.getElementById("feed-container");
+            container.innerHTML = "";
+            articles.forEach(art => {
+                const div = document.createElement("div");
+                div.className = "article-card";
+                div.innerHTML = `<h2 class="article-title">${art.title}</h2><div class="article-content">${art.content}</div>`;
+                container.appendChild(div);
+            });
+        } catch(e) {
+            document.getElementById("feed-container").innerHTML = "記事の読み込みに失敗しました。";
         }
     }
 
-    function handleLogout() {
-        if(!confirm("ログアウトしますか？")) return;
-        localStorage.removeItem("loginUser"); 
-        alert("ログアウトしました。ゲストモードに切り替えます。");
-        window.location.reload(); 
-    }
-
-    function goToLogin() {
-        window.location.href = "index.html";
-    }
-
-    function renderIdentitySelect() {
-        if (isGuest || userProfiles.length === 0) return;
-        const select = document.getElementById("identity-select");
-        select.innerHTML = "";
-        userProfiles.forEach((prof, index) => {
-            const opt = document.createElement("option");
-            opt.value = index;
-            opt.textContent = prof.isCompany ? `🏢 ${prof.name}` : `👤 ${prof.name} (個人)`;
-            select.appendChild(opt);
-        });
-        updateNavbarIcon();
-    }
-
-    function changeIdentity() {
-        if (isGuest || !currentActiveProfile) return;
-        const idx = document.getElementById("identity-select").value;
-        currentActiveProfile = userProfiles[idx];
-        updateNavbarIcon();
-        document.getElementById("post-box-title").textContent = `${currentActiveProfile.isCompany ? "🏢" : "👤"} ${currentActiveProfile.name} 名義でニュースを配信する`;
-        document.getElementById("edit-name").value = currentActiveProfile.name;
-        document.getElementById("edit-name").disabled = !currentActiveProfile.isCompany;
-        document.getElementById("edit-icon").value = currentActiveProfile.icon;
-    }
-
-    function updateNavbarIcon() {
-        if (isGuest || !currentActiveProfile) return;
-        document.getElementById("current-icon").src = currentActiveProfile.icon;
-    }
-
-    function toggleProfilePanel() {
-        if (isGuest) return;
-        const p = document.getElementById("profile-panel");
-        p.style.display = p.style.display === "none" ? "block" : "none";
-        changeIdentity();
-    }
-
-    async function saveProfile() {
-        if (isGuest || !currentActiveProfile) return;
-        const newName = document.getElementById("edit-name").value.trim();
-        const newIcon = document.getElementById("edit-icon").value.trim();
-        if(!newName || !newIcon) return alert("入力してください。");
-
-        currentActiveProfile.name = newName;
-        currentActiveProfile.icon = newIcon;
-
-        try {
-            await fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({
-                    action: "updateProfile",
-                    id: currentActiveProfile.id,
-                    name: newName,
-                    iconUrl: newIcon,
-                    isCompany: currentActiveProfile.isCompany,
-                    userId: myUserId
-                })
-            });
-        } catch(e) {}
-
-        alert("プロフィールを更新しました！");
-        renderIdentitySelect();
-        renderFeed();
-    }
-
-    async function createNewCompany() {
-        if (isGuest) return;
-        const compName = document.getElementById("new-comp-name").value.trim();
-        let compIcon = document.getElementById("new-comp-icon").value.trim();
-        
-        if (!compName) return alert("企業名を入力してください。");
-        if (!compIcon) compIcon = "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=100";
-
-        const compId = "corp_" + new Date().getTime();
-
-        userProfiles.push({ id: compId, name: compName, icon: compIcon, isCompany: true });
-
-        try {
-            await fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({
-                    action: "updateProfile",
-                    id: compId,
-                    name: compName,
-                    iconUrl: compIcon,
-                    isCompany: true,
-                    userId: myUserId
-                })
-            });
-        } catch(e) {}
-
-        alert(`🏢 架空企業「${compName}」が即時設立されました！\n右上のプルダウンから切り替えて、今すぐニュースを配信できます！`);
-        
-        document.getElementById("new-comp-name").value = "";
-        document.getElementById("new-comp-icon").value = "";
-        renderIdentitySelect();
-    }
-
-    function publishNews() {
-        if (isGuest || !currentActiveProfile) return;
+    // 記事の配信（GASへ送信）
+    async function publishNews() {
         const title = document.getElementById("art-title").value.trim();
         const content = document.getElementById("art-content").value.trim();
-        const tagsString = document.getElementById("art-tags").value;
-        if (!title || !content) return alert("入力してください。");
+        if (!title || !content) return alert("入力してください");
 
-        const tags = tagsString ? tagsString.split(",").map(t => t.trim()).filter(Boolean) : [];
-        articles.unshift({
-            id: "art_" + new Date().getTime(),
-            authorId: currentActiveProfile.id,
-            authorName: currentActiveProfile.name,
-            authorIcon: currentActiveProfile.icon,
-            isCompany: currentActiveProfile.isCompany,
-            title: title,
-            content: content,
-            tags: tags,
-            comments: []
+        const response = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "publishNews",
+                authorId: myUserId,
+                title: title,
+                content: content
+            })
         });
-
-        document.getElementById("art-title").value = "";
-        document.getElementById("art-content").value = "";
-        document.getElementById("art-tags").value = "";
+        const result = await response.json();
         
-        // 💡 ★記事をローカルストレージにセーブ
-        saveArticlesToStorage();
-        renderFeed();
-    }
-
-    function deleteArticle(artId) {
-        if(isGuest || !currentActiveProfile) return;
-        if(!confirm("削除しますか？")) return;
-        articles = articles.filter(art => art.id !== artId);
-        
-        // 💡 ★削除後のリストをローカルストレージにセーブ
-        saveArticlesToStorage();
-        renderFeed();
-    }
-
-    function addComment(artId) {
-        if(isGuest || !currentActiveProfile) return alert("コメントするにはログインが必要です。");
-        const input = document.getElementById(`comment-in-${artId}`);
-        const text = input.value.trim();
-        if(!text) return;
-        const art = articles.find(a => a.id === artId);
-        if(art) art.comments.push({ user: currentActiveProfile.name, text: text });
-        input.value = "";
-        
-        // 💡 ★コメント追加後のリストをローカルストレージにセーブ
-        saveArticlesToStorage();
-        renderFeed();
-    }
-
-    function switchView(mode) {
-        if(isGuest && mode === "follow") return;
-        currentViewMode = mode;
-        document.getElementById("tab-all").classList.toggle("active", mode === "all");
-        document.getElementById("tab-follow").classList.toggle("active", mode === "follow");
-        renderFeed();
-    }
-
-    function searchNews() {
-        searchWord = document.getElementById("search-input").value.toLowerCase();
-        renderFeed();
-    }
-
-    function clickTag(tagName) {
-        document.getElementById("search-input").value = tagName;
-        searchWord = tagName.toLowerCase();
-        renderFeed();
-    }
-
-    function clearFilter() {
-        document.getElementById("search-input").value = "";
-        searchWord = "";
-        renderFeed();
-    }
-
-    function renderFeed() {
-        const container = document.getElementById("feed-container");
-        container.innerHTML = "";
-        let filtered = articles;
-
-        if (currentViewMode === "follow" && !isGuest) {
-            filtered = filtered.filter(art => myFollowing.includes(art.authorId));
+        if (result.success) {
+            alert("配信完了！");
+            window.location.reload();
+        } else {
+            alert("失敗: " + result.message);
         }
-        if (searchWord) {
-            filtered = filtered.filter(art => {
-                return art.title.toLowerCase().includes(searchWord) || 
-                       art.content.toLowerCase().includes(searchWord) || 
-                       art.tags.some(t => t.toLowerCase().includes(searchWord));
-            });
-        }
-        if(filtered.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#999; padding:40px;">ニュースはありません。</div>';
-            return;
-        }
-
-        filtered.forEach(art => {
-            const card = document.createElement("div");
-            card.className = "article-card";
-            
-            const isFollowing = myFollowing.includes(art.authorId);
-            const followBtn = (!isGuest && art.authorId !== myUserId && !userProfiles.some(p => p.id === art.authorId)) ? `<button class="btn-secondary" onclick="toggleFollowUser('${art.authorId}')">${isFollowing ? '✓ フォロー中' : '＋ フォロー'}</button>` : '';
-            
-            const deleteBtn = (!isGuest && currentActiveProfile && (art.authorId === currentActiveProfile.id || myUserId === "tomidare1234")) ? `<button class="btn-danger" onclick="deleteArticle('${art.id}')">削除</button>` : '';
-            
-            const tagsHtml = art.tags.map(t => `<span class="tag" onclick="clickTag('${t}')">#${t}</span>`).join("");
-            const commentsHtml = art.comments.map(c => `<div class="comment"><span class="comment-user">${c.user}:</span><span>${c.text}</span></div>`).join("");
-
-            const commentInputHtml = isGuest 
-                ? `<div style="font-size:12px; color:#888; text-align:center; padding:5px;">💬 コメントするには <a href="#" onclick="goToLogin()" style="color:#0052a3; font-weight:bold;">ログイン</a> が必要です</div>`
-                : `<div class="comment-input-group">
-                        <input type="text" id="comment-in-${art.id}" placeholder="コメント...">
-                        <button class="btn" style="padding:4px 12px; font-size:13px;" onclick="addComment('${art.id}')">送信</button>
-                   </div>`;
-
-            card.innerHTML = `
-                <div class="article-header">
-                    <div class="header-left">
-                        <img class="profile-icon" src="${art.authorIcon}">
-                        <div class="author-name">${art.isCompany ? '🏢' : '👤'} ${art.authorName} ${followBtn}</div>
-                    </div>
-                    <div>${deleteBtn}</div>
-                </div>
-                <h2 class="article-title">${art.title}</h2>
-                <div class="article-content">${art.content}</div>
-                <div style="margin-bottom:15px;">${tagsHtml}</div>
-                <div class="comment-section">
-                    <div class="comment-list">${commentsHtml}</div>
-                    ${commentInputHtml}
-                </div>
-            `;
-            container.appendChild(card);
-        });
     }
-
-async function publishNews() {
-    const title = document.getElementById("art-title").value.trim();
-    const content = document.getElementById("art-content").value.trim();
-    
-    // GASにデータを送る
-    const response = await fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
-            action: "publishNews",
-            authorId: currentActiveProfile.id,
-            authorName: currentActiveProfile.name,
-            title: title,
-            content: content
-        })
-    });
-    const result = await response.json();
-    
-    if (result.success) {
-        alert("配信完了！");
-        // ここで再読み込みして一覧を更新する
-        window.location.reload();
-    }
-}
-    
 </script>
 </body>
 </html>
