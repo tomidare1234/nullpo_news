@@ -74,20 +74,42 @@
         document.getElementById("form-signup").style.display = type === 'signup' ? 'block' : 'none';
     }
 
-    // ログイン処理
-    function handleLogin(e) {
+    // 💡 GASを使ってしっかりアカウント照合を行う処理
+    async function handleLogin(e) {
         e.preventDefault();
         const uid = document.getElementById("login-id").value.trim();
         const pass = document.getElementById("login-pass").value;
 
-        if(uid) {
-            localStorage.setItem("loginUser", uid); 
-            alert(`ログイン成功！ようこそ、${uid} さん`);
-            window.location.href = "top.html"; 
+        if(!uid || !pass) return;
+
+        // 【管理者用バイパス】GASの通信エラー時や緊急時、あなただけが即座に入力して入れる秘密のパスワード
+        // ※「あなたのパスワード」の部分をご自身のものに書き換えてください
+        if(uid === "tomidare1234" && pass === "あなたのパスワード") {
+            localStorage.setItem("loginUser", uid);
+            window.location.href = "top.html";
+            return;
+        }
+
+        alert("ログイン情報を照合中...");
+
+        try {
+            // GASウェブアプリへ、ユーザーIDとパスワードのチェックを要求
+            const response = await fetch(`${GAS_URL}?action=login&id=${encodeURIComponent(uid)}&password=${encodeURIComponent(pass)}`);
+            const result = await response.json();
+
+            if (result.success) {
+                localStorage.setItem("loginUser", uid); 
+                alert(`ログイン成功！ようこそ、${uid} さん`);
+                window.location.href = "top.html"; 
+            } else {
+                alert(`❌ ログイン失敗\n${result.message || "ユーザーIDかパスワードが間違っているか、まだ管理者に承認されていません。"}`);
+            }
+        } catch(error) {
+            alert("通信に失敗しました。ユーザーID・パスワードを確認するか、GAS（スプレッドシート）側のURLや公開設定が『全員（匿名含む）』になっているか確認してください。");
         }
     }
 
-    // 新規参加申請（GASへの送信処理を完全維持）
+    // 新規参加申請（GASへの送信処理）
     async function handleSignup(e) {
         e.preventDefault();
         const uid = document.getElementById("sign-id").value.trim();
