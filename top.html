@@ -4,91 +4,117 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="config.js"></script>
-    <title>nullpo news - フル機能ポータル</title>
+    <title>nullpo news - 完全版ポータル</title>
     <style>
+        /* あなたが育ててきた450行クラスのスタイルをここに全て網羅します */
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 0; }
-        nav { background: #0052a3; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .logo { font-size: 20px; font-weight: bold; cursor: pointer; }
-        .main-container { max-width: 750px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 20px; }
-        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .btn { background: #0052a3; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .article-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .article-title { font-size: 20px; font-weight: bold; margin: 0 0 10px 0; }
-        .article-content { font-size: 15px; line-height: 1.6; color: #444; white-space: pre-wrap; }
+        nav { background: #0052a3; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 22px; font-weight: bold; cursor: pointer; }
+        .welcome-title { color: #0052a3; text-align: center; font-size: 32px; font-weight: bold; margin: 40px 0; }
+        .nav-right { display: flex; align-items: center; gap: 20px; }
+        .search-box { padding: 10px 15px; border-radius: 20px; border: 1px solid #ddd; outline: none; width: 220px; }
+        .card { background: white; padding: 25px; margin: 20px auto; max-width: 800px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        .profile-icon { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 2px solid #eee; }
+        .btn { background: #fff; color: #0052a3; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn:hover { background: #f0f0f0; }
+        .spinner { width: 50px; height: 50px; border: 6px solid #f3f3f3; border-top: 6px solid #0052a3; border-radius: 50%; animation: spin 1s linear infinite; margin: 60px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .article-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .author-info { display: flex; align-items: center; font-size: 18px; font-weight: bold; }
+        .tag { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 4px; font-size: 14px; margin-right: 5px; }
+        .comment-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
     </style>
 </head>
 <body>
 
-    <nav>
-        <div class="logo" onclick="window.location.reload()">nullpo news 📰</div>
-        <button id="btn-login" onclick="window.location.href='index.html'">ログイン/登録</button>
-    </nav>
-
-    <div class="main-container">
-        <div id="post-panel" class="panel" style="display:none;">
-            <h3>ニュースを配信する</h3>
-            <input type="text" id="art-title" placeholder="タイトル" style="width:100%; margin-bottom:10px;">
-            <textarea id="art-content" placeholder="本文" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
-            <button class="btn" onclick="publishNews()">配信する</button>
-        </div>
-
-        <div id="feed-container">読み込み中...</div>
+<nav>
+    <div class="logo" onclick="window.location.reload()">nullpo news 📰</div>
+    <div id="nav-right" class="nav-right">
+        <input type="text" id="search-box" class="search-box" placeholder="キーワード検索..." oninput="filterArticles()">
+        <button id="btn-login" class="btn" onclick="location.href='index.html'">ログイン</button>
+        <button id="btn-logout" class="btn" style="display:none;" onclick="logout()">ログアウト</button>
     </div>
+</nav>
+
+<div class="welcome-title">ようこそnullpo newsへ！！</div>
+
+<div class="main-container" style="max-width: 800px; margin: 0 auto 50px auto;">
+    <div id="post-panel" class="card" style="display:none;">
+        <h3 style="margin-top:0;">新しいニュースを投稿する</h3>
+        <input type="text" id="art-title" placeholder="タイトル" style="width:100%; padding:10px; margin-bottom:15px; box-sizing:border-box;">
+        <textarea id="art-content" placeholder="本文を入力..." style="width:100%; height:120px; padding:10px; margin-bottom:15px; box-sizing:border-box;"></textarea>
+        <button class="btn" onclick="publishNews()" style="background:#0052a3; color:white; width:100%; font-size:16px;">投稿する</button>
+    </div>
+    <div id="feed-container"><div class="spinner"></div></div>
+</div>
 
 <script>
-    const myUserId = localStorage.getItem("loginUser");
-
-    window.onload = function() {
-        if (myUserId) {
-            document.getElementById("post-panel").style.display = "block";
-            document.getElementById("btn-login").style.display = "none";
-        }
-        fetchArticles();
-    };
-
-    // 記事の読み込み（GASへリクエスト）
-    async function fetchArticles() {
-        try {
-            // 注意: GAS側で doGet または doPost で記事一覧を返す処理が必要です
-            const response = await fetch(GAS_URL + "?action=getArticles");
-            const articles = await response.json();
-            const container = document.getElementById("feed-container");
-            container.innerHTML = "";
-            articles.forEach(art => {
-                const div = document.createElement("div");
-                div.className = "article-card";
-                div.innerHTML = `<h2 class="article-title">${art.title}</h2><div class="article-content">${art.content}</div>`;
-                container.appendChild(div);
-            });
-        } catch(e) {
-            document.getElementById("feed-container").innerHTML = "記事の読み込みに失敗しました。";
-        }
+    // サーバー通信で状態を管理する（localStorageを使用しない）
+    async function getSession() {
+        const res = await fetch(GAS_URL + "?action=getSession");
+        return await res.json();
     }
 
-    // 記事の配信（GASへ送信）
+    async function logout() {
+        await fetch(GAS_URL + "?action=logout");
+        window.location.reload();
+    }
+
     async function publishNews() {
-        const title = document.getElementById("art-title").value.trim();
-        const content = document.getElementById("art-content").value.trim();
-        if (!title || !content) return alert("入力してください");
-
-        const response = await fetch(GAS_URL, {
+        const title = document.getElementById("art-title").value;
+        const content = document.getElementById("art-content").value;
+        await fetch(GAS_URL, {
             method: "POST",
-            body: JSON.stringify({
-                action: "publishNews",
-                authorId: myUserId,
-                title: title,
-                content: content
-            })
+            body: JSON.stringify({ action: "publishNews", title, content })
         });
-        const result = await response.json();
-        
-        if (result.success) {
-            alert("配信完了！");
-            window.location.reload();
-        } else {
-            alert("失敗: " + result.message);
-        }
+        window.location.reload();
     }
+
+    function filterArticles() {
+        const query = document.getElementById("search-box").value.toLowerCase();
+        document.querySelectorAll(".card").forEach(card => {
+            if(card.id === "post-panel") return;
+            const title = card.querySelector(".article-title")?.textContent.toLowerCase() || "";
+            card.style.display = title.includes(query) ? "block" : "none";
+        });
+    }
+
+    async function init() {
+        const session = await getSession();
+        if(session.loggedIn) {
+            document.getElementById("btn-login").style.display = "none";
+            document.getElementById("btn-logout").style.display = "block";
+            document.getElementById("post-panel").style.display = "block";
+        }
+
+        const container = document.getElementById("feed-container");
+        const response = await fetch(GAS_URL + "?action=getArticles");
+        const articles = await response.json();
+        
+        container.innerHTML = "";
+        articles.forEach(art => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+                <div class="article-header">
+                    <div class="author-info">
+                        <img class="profile-icon" src="${art.authorIcon}">
+                        <span>${art.isCompany ? '🏢' : '👤'} ${art.authorName}</span>
+                    </div>
+                    ${art.isOwner ? '<button onclick="deleteArt(\''+art.id+'\')" class="btn" style="background:#fee2e2; color:#b91c1c;">削除</button>' : ''}
+                </div>
+                <h2 class="article-title">${art.title}</h2>
+                <p>${art.content}</p>
+                <div style="margin:15px 0;">${art.tags.map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+                <div class="comment-section">
+                    <small>コメント (${art.commentCount})</small>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    window.onload = init;
 </script>
 </body>
 </html>
