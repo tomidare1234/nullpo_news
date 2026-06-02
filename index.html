@@ -72,7 +72,7 @@
         </div>
 
         <form id="form-login" method="POST" target="hidden_iframe" onsubmit="handleLoginSubmit(event)">
-            <input type="hidden" name="action" value="loginUser">
+            <input type="hidden" name="action" value="login">
             
             <div class="input-group">
                 <label>ユーザーID</label>
@@ -148,14 +148,14 @@
         const uid = document.getElementById("login-id").value;
         if(uid === "nullpo_tester") {
             e.preventDefault();
-            localStorage.setItem("loginUser", uid);
+            localStorage.setItem("login", uid);
             window.location.href = "top.html";
             return;
         }
         
         startLoading("btn-login-submit", "照合中");
         setTimeout(() => {
-            localStorage.setItem("loginUser", uid);
+            localStorage.setItem("login", uid);
             window.location.href = "top.html";
         }, 1500);
     }
