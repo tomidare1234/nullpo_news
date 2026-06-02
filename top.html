@@ -419,6 +419,31 @@
             container.appendChild(card);
         });
     }
+
+async function publishNews() {
+    const title = document.getElementById("art-title").value.trim();
+    const content = document.getElementById("art-content").value.trim();
+    
+    // GASにデータを送る
+    const response = await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "publishNews",
+            authorId: currentActiveProfile.id,
+            authorName: currentActiveProfile.name,
+            title: title,
+            content: content
+        })
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+        alert("配信完了！");
+        // ここで再読み込みして一覧を更新する
+        window.location.reload();
+    }
+}
+    
 </script>
 </body>
 </html>
