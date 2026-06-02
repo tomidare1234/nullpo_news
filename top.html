@@ -7,7 +7,7 @@
     <title>nullpo news - フル機能ポータル</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 0; }
-        nav { background: #0052a3; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        nav { background: #0052a3; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .logo { font-size: 20px; font-weight: bold; cursor: pointer; }
         .nav-right { display: flex; align-items: center; gap: 15px; }
         .search-box { padding: 6px 12px; border-radius: 20px; border: none; outline: none; font-size: 14px; width: 180px; }
@@ -15,39 +15,26 @@
         .profile-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #fff; cursor: pointer; }
         select { background: transparent; color: white; border: none; font-size: 14px; font-weight: bold; cursor: pointer; outline: none; }
         select option { color: #333; }
-        
         .main-container { max-width: 750px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 20px; }
-        
-        /* プロフィール編集パネル */
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .panel h3 { margin-top: 0; font-size: 16px; color: #444; border-bottom: 2px solid #eef2f5; padding-bottom: 8px; }
         .flex-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
         input[type="text"], textarea { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        
         .btn { background: #0052a3; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-danger { background: #cc0000; padding: 4px 8px; font-size: 12px; border-radius: 4px; }
-        .btn-secondary { background: #666; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
-        
-        /* ニュースカード */
-        .article-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; }
+        .btn-danger { background: #cc0000; padding: 4px 8px; font-size: 12px; border-radius: 4px; color: white; border: none; cursor: pointer; }
+        .btn-secondary { background: #666; font-size: 12px; padding: 4px 8px; border-radius: 4px; color: white; border: none; cursor: pointer; }
+        .article-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .article-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .author-name { font-weight: bold; color: #333; font-size: 14px; display: flex; align-items: center; gap: 8px; }
         .article-title { font-size: 20px; font-weight: bold; margin: 0 0 10px 0; color: #111; }
         .article-content { font-size: 15px; line-height: 1.6; color: #444; white-space: pre-wrap; margin-bottom: 15px; }
-        
-        /* タグバッジ */
-        .tag { background: #e1ecf4; color: #39739d; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; text-decoration: none; margin-right: 5px; display: inline-block; }
-        .tag:hover { background: #cee0ed; }
-        
-        /* コメントセクション */
+        .tag { background: #e1ecf4; color: #39739d; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; display: inline-block; }
         .comment-section { margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; }
         .comment-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
         .comment { background: #f6f8fa; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
         .comment-user { font-weight: bold; color: #0052a3; margin-right: 8px; }
         .comment-input-group { display: flex; gap: 8px; }
-        
-        /* タブ切り替え表示 */
         .view-tabs { display: flex; gap: 15px; margin-bottom: -10px; font-weight: bold; font-size: 14px; }
         .v-tab { cursor: pointer; color: #666; padding-bottom: 5px; border-bottom: 2px solid transparent; }
         .v-tab.active { color: #0052a3; border-bottom: 2px solid #0052a3; }
@@ -58,7 +45,6 @@
     <nav>
         <div class="logo" onclick="clearFilter()">nullpo news 📰</div>
         <div class="nav-right">
-            <!-- 🔍 検索機能 -->
             <input type="text" id="search-input" class="search-box" placeholder="キーワード・タグ検索..." oninput="searchNews()">
             <div class="profile-switcher">
                 <img id="current-icon" class="profile-icon" src="" alt="icon" onclick="toggleProfilePanel()">
@@ -68,40 +54,35 @@
     </nav>
 
     <div class="main-container">
-        <!-- 👤 アカウントプロフィール編集・確認 -->
         <div id="profile-panel" class="panel" style="display:none;">
-            <h3 id="prof-title">プロフィール編集</h3>
+            <h3>プロフィール編集</h3>
             <div class="flex-inputs">
-                <input type="text" id="edit-name" placeholder="表示名（企業のみ変更可）">
+                <input type="text" id="edit-name" placeholder="表示名">
                 <input type="text" id="edit-icon" placeholder="アイコン画像URL">
             </div>
             <button class="btn" style="padding: 6px 12px; font-size:13px;" onclick="saveProfile()">保存する</button>
         </div>
 
-        <!-- ✍️ 配信・投稿ボックス -->
         <div class="panel">
             <h3 id="post-box-title">👤 ニュースを配信する</h3>
             <input type="text" id="art-title" placeholder="記事のタイトル" style="width:100%; margin-bottom:10px;">
-            <textarea id="art-content" placeholder="ニュース本文を入力... (HTMLタグ使用可能！)" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
-            <input type="text" id="art-tags" placeholder="タグをカンマ区切りで入力 (例: インフラ, 霧原線)" style="width:100%; margin-bottom:10px;">
+            <textarea id="art-content" placeholder="ニュース本文... (HTMLタグ使用可能！)" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+            <input type="text" id="art-tags" placeholder="タグをカンマ区切りで入力 (例: インフラ, 鉄道)" style="width:100%; margin-bottom:10px;">
             <button class="btn" style="float:right;" onclick="publishNews()">配信する</button>
             <div style="clear:both;"></div>
         </div>
 
-        <!-- 👥 フォロー切り替えタブ -->
         <div class="view-tabs">
             <div id="tab-all" class="v-tab active" onclick="switchView('all')">すべてのニュース</div>
             <div id="tab-follow" class="v-tab" onclick="switchView('follow')">フォロー中</div>
         </div>
 
-        <!-- 📰 ニュースフィード -->
         <div id="feed-container"></div>
     </div>
 
 <script>
-    // --- 擬似ローカルDB兼本番データ受け皿 ---
     let myUserId = "tomidare1234"; 
-    let myFollowing = ["corp_1"]; // フォローしているIDリスト
+    let myFollowing = ["corp_1"];
     
     let userProfiles = [
         { id: "tomidare1234", name: "tomidare1234", icon: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", isCompany: false },
@@ -109,10 +90,9 @@
         { id: "corp_2", name: "霞野航空", icon: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=100", isCompany: true }
     ];
     let currentActiveProfile = userProfiles[0];
-    let currentViewMode = "all"; // all or follow
+    let currentViewMode = "all";
     let searchWord = "";
 
-    // 初期サンプル記事データ
     let articles = [
         {
             id: "art_1",
@@ -121,9 +101,9 @@
             authorIcon: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=100",
             isCompany: true,
             title: "【インフラ】霧原線（KR）の一部区間で高架化工事が完了",
-            content: `<b style="color:#cc0000; font-size:16px;">【快適な街づくりへ】</b><br>本日、新都市開発に伴う高架化が全線で完了。踏切事故ゼロを目指します！<br><marquee scrollamount="5" style="color:blue; font-weight:bold;">✨新型車両も今秋ロールアウト決定！✨</marquee>`,
-            tags: ["インフラ", "霧原線", "鉄道"],
-            comments: [{ user: "tomidare1234", text: "ついに高架化！前面展望動画が楽しみです。" }]
+            content: `<b style="color:#cc0000; font-size:16px;">【快適な街づくりへ】</b><br>本日、新都市開発に伴う高架化が全線で完了。<br><marquee scrollamount="5" style="color:blue; font-weight:bold;">✨新型車両も今秋運行開始！✨</marquee>`,
+            tags: ["インフラ", "霧原線"],
+            comments: [{ user: "tomidare1234", text: "ついに高架化！" }]
         }
     ];
 
@@ -149,10 +129,8 @@
         currentActiveProfile = userProfiles[idx];
         updateNavbarIcon();
         document.getElementById("post-box-title").textContent = `${currentActiveProfile.isCompany ? "🏢" : "👤"} ${currentActiveProfile.name} 名義でニュースを配信する`;
-        
-        // 編集パネルの初期値をセット
         document.getElementById("edit-name").value = currentActiveProfile.name;
-        document.getElementById("edit-name").disabled = !currentActiveProfile.isCompany; // 個人はID固定
+        document.getElementById("edit-name").disabled = !currentActiveProfile.isCompany;
         document.getElementById("edit-icon").value = currentActiveProfile.icon;
     }
 
@@ -166,7 +144,6 @@
         changeIdentity();
     }
 
-    // 👤 アカウントプロフィール保存機能
     async function saveProfile() {
         const newName = document.getElementById("edit-name").value.trim();
         const newIcon = document.getElementById("edit-icon").value.trim();
@@ -175,7 +152,6 @@
         currentActiveProfile.name = newName;
         currentActiveProfile.icon = newIcon;
         
-        // 記事内の投稿者情報もリアルタイム更新
         articles.forEach(art => {
             if(art.authorId === currentActiveProfile.id) {
                 art.authorName = newName;
@@ -183,10 +159,10 @@
             }
         });
 
-        // GASへ保存通信（ログイン済み想定のモック通信、実運用時は引数を調整）
         try {
             await fetch(GAS_URL, {
                 method: "POST",
+                mode: "no-cors",
                 body: JSON.stringify({
                     action: "updateProfile",
                     id: currentActiveProfile.id,
@@ -203,80 +179,59 @@
         renderFeed();
     }
 
-    // ✍️ ニュース配信（タグ機能 ＆ HTML対応）
     function publishNews() {
         const title = document.getElementById("art-title").value.trim();
         const content = document.getElementById("art-content").value.trim();
         const tagsString = document.getElementById("art-tags").value;
-        
-        if (!title || !content) return alert("タイトルと本文を入力してください。");
+        if (!title || !content) return alert("入力してください。");
 
-        // カンマ区切りのタグを配列にする処理
         const tags = tagsString ? tagsString.split(",").map(t => t.trim()).filter(Boolean) : [];
-
-        const newArticle = {
+        articles.unshift({
             id: "art_" + new Date().getTime(),
             authorId: currentActiveProfile.id,
             authorName: currentActiveProfile.name,
             authorIcon: currentActiveProfile.icon,
             isCompany: currentActiveProfile.isCompany,
             title: title,
-            content: content, // ★ innerHTMLで表示されるのでHTML埋め込みOK仕様
+            content: content,
             tags: tags,
             comments: []
-        };
+        });
 
-        articles.unshift(newArticle);
-        
-        // 入力欄をクリア
         document.getElementById("art-title").value = "";
         document.getElementById("art-content").value = "";
         document.getElementById("art-tags").value = "";
-        
         renderFeed();
     }
 
-    // 🗑️ 投稿消去機能
     function deleteArticle(artId) {
-        if(!confirm("このニュース投稿を削除してもよろしいですか？")) return;
+        if(!confirm("削除しますか？")) return;
         articles = articles.filter(art => art.id !== artId);
         renderFeed();
     }
 
-    // 💬 コメント追加機能
     function addComment(artId) {
         const input = document.getElementById(`comment-in-${artId}`);
         const text = input.value.trim();
         if(!text) return;
-
         const art = articles.find(a => a.id === artId);
-        if(art) {
-            art.comments.push({
-                user: currentActiveProfile.name,
-                text: text // コメントも必要なら簡易タグが使える形に
-            });
-        }
+        if(art) art.comments.push({ user: currentActiveProfile.name, text: text });
         input.value = "";
         renderFeed();
     }
 
-    // 🤝 フォロー機能のトグル
     async function toggleFollowUser(targetId) {
         const idx = myFollowing.indexOf(targetId);
-        if(idx !== -1) {
-            myFollowing.splice(idx, 1);
-        } else {
-            myFollowing.push(targetId);
-        }
+        if(idx !== -1) myFollowing.splice(idx, 1);
+        else myFollowing.push(targetId);
         
-        // GAS側への同期通信
         try {
             await fetch(GAS_URL, {
                 method: "POST",
+                mode: "no-cors",
                 body: JSON.stringify({ action: "toggleFollow", userId: myUserId, targetId: targetId })
             });
         } catch(e) {}
-        
         renderFeed();
     }
 
@@ -287,7 +242,6 @@
         renderFeed();
     }
 
-    // 🔍 検索機能（キーワード ＆ タグクリック）
     function searchNews() {
         searchWord = document.getElementById("search-input").value.toLowerCase();
         renderFeed();
@@ -305,77 +259,50 @@
         renderFeed();
     }
 
-    // 📰 フィードの超絶描画処理
     function renderFeed() {
         const container = document.getElementById("feed-container");
         container.innerHTML = "";
-
-        // 1. ビューモード（すべて vs フォロー中）で絞り込み
         let filtered = articles;
+
         if (currentViewMode === "follow") {
             filtered = filtered.filter(art => myFollowing.includes(art.authorId));
         }
-
-        // 2. 検索キーワード・タグで絞り込み
         if (searchWord) {
             filtered = filtered.filter(art => {
-                const matchTitle = art.title.toLowerCase().includes(searchWord);
-                const matchContent = art.content.toLowerCase().includes(searchWord);
-                const matchTag = art.tags.some(t => t.toLowerCase().includes(searchWord));
-                return matchTitle || matchContent || matchTag;
+                return art.title.toLowerCase().includes(searchWord) || 
+                       art.content.toLowerCase().includes(searchWord) || 
+                       art.tags.some(t => t.toLowerCase().includes(searchWord));
             });
         }
-
         if(filtered.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#999; padding:40px;">該当するニュースはありません。</div>';
+            container.innerHTML = '<div style="text-align:center; color:#999; padding:40px;">ニュースはありません。</div>';
             return;
         }
 
         filtered.forEach(art => {
             const card = document.createElement("div");
             card.className = "article-card";
-
-            // フォローボタンのテキスト
             const isFollowing = myFollowing.includes(art.authorId);
-            const followBtnHtml = (art.authorId !== myUserId) ? 
-                `<button class="btn-secondary" onclick="toggleFollowUser('${art.authorId}')">${isFollowing ? '✓ フォロー中' : '＋ フォロー'}</button>` : '';
-
-            // 削除ボタン（自分の投稿、または個人名義のときに自分が管理者の場合消せる）
-            const deleteBtnHtml = (art.authorId === currentActiveProfile.id || currentActiveProfile.id === "tomidare1234") ? 
-                `<button class="btn-danger" onclick="deleteArticle('${art.id}')">削除</button>` : '';
-
-            // タグのHTML生成
+            const followBtn = (art.authorId !== myUserId) ? `<button class="btn-secondary" onclick="toggleFollowUser('${art.authorId}')">${isFollowing ? '✓ フォロー中' : '＋ フォロー'}</button>` : '';
+            const deleteBtn = (art.authorId === currentActiveProfile.id || currentActiveProfile.id === "tomidare1234") ? `<button class="btn-danger" onclick="deleteArticle('${art.id}')">削除</button>` : '';
             const tagsHtml = art.tags.map(t => `<span class="tag" onclick="clickTag('${t}')">#${t}</span>`).join("");
-
-            // コメントのHTML生成
-            const commentsHtml = art.comments.map(c => `
-                <div class="comment">
-                    <span class="comment-user">${c.user}:</span><span>${c.text}</span>
-                </div>
-            `).join("");
+            const commentsHtml = art.comments.map(c => `<div class="comment"><span class="comment-user">${c.user}:</span><span>${c.text}</span></div>`).join("");
 
             card.innerHTML = `
                 <div class="article-header">
                     <div class="header-left">
-                        <img class="profile-icon" src="${art.authorIcon}" alt="icon">
-                        <div class="author-info">
-                            <div class="author-name">
-                                ${art.isCompany ? '🏢' : '👤'} ${art.authorName}
-                                ${followBtnHtml}
-                            </div>
-                        </div>
+                        <img class="profile-icon" src="${art.authorIcon}">
+                        <div class="author-name">${art.isCompany ? '🏢' : '👤'} ${art.authorName} ${followBtn}</div>
                     </div>
-                    <div>${deleteBtnHtml}</div>
+                    <div>${deleteBtn}</div>
                 </div>
                 <h2 class="article-title">${art.title}</h2>
                 <div class="article-content">${art.content}</div>
-                <div style="margin-bottom: 15px;">${tagsHtml}</div>
-                
-                <!-- コメント欄 -->
+                <div style="margin-bottom:15px;">${tagsHtml}</div>
                 <div class="comment-section">
                     <div class="comment-list">${commentsHtml}</div>
                     <div class="comment-input-group">
-                        <input type="text" id="comment-in-${art.id}" placeholder="コメントを入力...">
+                        <input type="text" id="comment-in-${art.id}" placeholder="コメント...">
                         <button class="btn" style="padding:4px 12px; font-size:13px;" onclick="addComment('${art.id}')">送信</button>
                     </div>
                 </div>
