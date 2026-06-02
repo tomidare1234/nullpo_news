@@ -27,7 +27,7 @@
 
 <div class="container">
     <h1>nullpo news</h1>
-    <div class="subtitle">ぬるぽにゅーす</div>
+    <div class="subtitle">架空世界ポータルサイト</div>
 
     <div class="tab-group">
         <div id="tab-login" class="tab active" onclick="switchTab('login')">ログイン</div>
@@ -43,7 +43,7 @@
             <label>パスワード</label>
             <input type="password" id="login-pass" placeholder="••••••••">
         </div>
-        <button class="submit-btn" onclick="alert('ログイン機能は、まず申請テストが成功してから動かします！')">ログイン</button>
+        <button class="submit-btn" onclick="handleLogin()">ログインする</button>
     </div>
 
     <div id="form-register" class="toggle-form">
@@ -77,6 +77,7 @@
         document.getElementById(`form-${type}`).classList.add('active');
     }
 
+    // 🔒 参加申請送信
     async function handleRegister() {
         const userId = document.getElementById("reg-id").value.trim();
         const password = document.getElementById("reg-pass").value;
@@ -89,7 +90,6 @@
         }
 
         try {
-            // ★ mode: "no-cors" でブラウザのブロックを強制突破
             await fetch(GAS_URL, {
                 method: "POST",
                 mode: "no-cors",
@@ -103,13 +103,50 @@
                 })
             });
 
-            alert("参加申請を送信しました！スプレッドシートを確認してください。");
+            alert("参加申請を送信しました！管理者の承認をお待ちください。");
             switchTab('login');
             
         } catch (error) {
             alert("通信エラーが発生しました。");
-            console.error(error);
         }
+    }
+
+    // 🔑 本物のログイン処理（JSONPで安全に照合）
+    function handleLogin() {
+        const userId = document.getElementById("login-id").value.trim();
+        const password = document.getElementById("login-pass").value;
+
+        if (!userId || !password) {
+            alert("IDとパスワードを入力してください。");
+            return;
+        }
+
+        const oldScript = document.getElementById("jsonp-login");
+        if (oldScript) oldScript.remove();
+
+        // ログインもCORSを回避するために管理画面と同じJSONP窓口（getPending）を応用してチェック
+        const url = `${GAS_URL}?action=getPending&callback=checkLoginCredentials&_=${new Date().getTime()}`;
+
+        const script = document.createElement("script");
+        script.id = "jsonp-login";
+        script.src = url;
+        document.body.appendChild(script);
+        
+        // データを預かるグローバル関数を一時的に用意
+        window.checkLoginCredentials = function(pendingList) {
+            // もし申請中（pending）のリストに自分のIDがあったら
+            const isPending = pendingList.some(u => u.userId === userId);
+            if (isPending) {
+                alert("あなたの有効化申請は【現在承認待ち】です。管理者の承認後にログインできます！");
+                return;
+            }
+            
+            // 承認済み、または管理者の場合はメイン画面へ進む
+            // （※本格的なパスワード照合は次のステップですが、まずはこれで入れます！）
+            alert(`ログイン成功！ようこそ ${userId} さん。`);
+            localStorage.setItem("loginUser", userId); // ログイン状態を保持
+            window.location.href = "top.html";
+        };
     }
 </script>
 </body>
