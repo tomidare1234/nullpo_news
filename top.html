@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="config.js"></script>
-    <title>nullpo news - フル機能ポータル</title>
+    <title>nullpo news</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 0; }
         nav { background: #0052a3; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -21,6 +21,8 @@
         .flex-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
         input[type="text"], textarea { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         .btn { background: #0052a3; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
         .btn-danger { background: #cc0000; padding: 4px 8px; font-size: 12px; border-radius: 4px; color: white; border: none; cursor: pointer; }
         .btn-secondary { background: #666; font-size: 12px; padding: 4px 8px; border-radius: 4px; color: white; border: none; cursor: pointer; }
         .article-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -38,6 +40,7 @@
         .view-tabs { display: flex; gap: 15px; margin-bottom: -10px; font-weight: bold; font-size: 14px; }
         .v-tab { cursor: pointer; color: #666; padding-bottom: 5px; border-bottom: 2px solid transparent; }
         .v-tab.active { color: #0052a3; border-bottom: 2px solid #0052a3; }
+        .divider { border-top: 1px dashed #ddd; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -55,18 +58,27 @@
 
     <div class="main-container">
         <div id="profile-panel" class="panel" style="display:none;">
-            <h3>プロフィール編集</h3>
+            <h3>👤 プロフィール編集</h3>
             <div class="flex-inputs">
                 <input type="text" id="edit-name" placeholder="表示名">
                 <input type="text" id="edit-icon" placeholder="アイコン画像URL">
             </div>
-            <button class="btn" style="padding: 6px 12px; font-size:13px;" onclick="saveProfile()">保存する</button>
+            <button class="btn" style="padding: 6px 12px; font-size:13px; margin-bottom: 10px;" onclick="saveProfile()">保存する</button>
+
+            <div class="divider"></div>
+
+            <h3>🏢 新しい企業・組織を設立する</h3>
+            <div class="flex-inputs">
+                <input type="text" id="new-comp-name" placeholder="例: 霧原急行電鉄">
+                <input type="text" id="new-comp-icon" placeholder="企業ロゴの画像URL (任意)">
+            </div>
+            <button class="btn btn-success" style="padding: 6px 12px; font-size:13px;" onclick="createNewCompany()">承認なしで企業を即時設立する</button>
         </div>
 
         <div class="panel">
             <h3 id="post-box-title">👤 ニュースを配信する</h3>
             <input type="text" id="art-title" placeholder="記事のタイトル" style="width:100%; margin-bottom:10px;">
-            <textarea id="art-content" placeholder="ニュース本文... (HTMLタグ使用可能！)" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+            <textarea id="art-content" placeholder="ニュース本文... (HTMLタグ使用可能！赤くて太くておっきい文字もOK！)" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
             <input type="text" id="art-tags" placeholder="タグをカンマ区切りで入力 (例: インフラ, 鉄道)" style="width:100%; margin-bottom:10px;">
             <button class="btn" style="float:right;" onclick="publishNews()">配信する</button>
             <div style="clear:both;"></div>
@@ -81,31 +93,16 @@
     </div>
 
 <script>
-    let myUserId = "tomidare1234"; 
-    let myFollowing = ["corp_1"];
+    let myUserId = localStorage.getItem("loginUser") || "tomidare1234"; 
+    let myFollowing = [];
     
     let userProfiles = [
-        { id: "tomidare1234", name: "tomidare1234", icon: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", isCompany: false },
-        { id: "corp_1", name: "霧原急行電鉄", icon: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=100", isCompany: true },
-        { id: "corp_2", name: "霞野航空", icon: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=100", isCompany: true }
+        { id: myUserId, name: myUserId, icon: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", isCompany: false }
     ];
     let currentActiveProfile = userProfiles[0];
     let currentViewMode = "all";
     let searchWord = "";
-
-    let articles = [
-        {
-            id: "art_1",
-            authorId: "corp_1",
-            authorName: "霧原急行電鉄",
-            authorIcon: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=100",
-            isCompany: true,
-            title: "【インフラ】霧原線（KR）の一部区間で高架化工事が完了",
-            content: `<b style="color:#cc0000; font-size:16px;">【快適な街づくりへ】</b><br>本日、新都市開発に伴う高架化が全線で完了。<br><marquee scrollamount="5" style="color:blue; font-weight:bold;">✨新型車両も今秋運行開始！✨</marquee>`,
-            tags: ["インフラ", "霧原線"],
-            comments: [{ user: "tomidare1234", text: "ついに高架化！" }]
-        }
-    ];
+    let articles = [];
 
     window.onload = function() {
         renderIdentitySelect();
@@ -151,13 +148,6 @@
 
         currentActiveProfile.name = newName;
         currentActiveProfile.icon = newIcon;
-        
-        articles.forEach(art => {
-            if(art.authorId === currentActiveProfile.id) {
-                art.authorName = newName;
-                art.authorIcon = newIcon;
-            }
-        });
 
         try {
             await fetch(GAS_URL, {
@@ -177,6 +167,47 @@
         alert("プロフィールを更新しました！");
         renderIdentitySelect();
         renderFeed();
+    }
+
+    // 🏢 承認不要！その場で即座に企業アカウントを有効化する
+    async function createNewCompany() {
+        const compName = document.getElementById("new-comp-name").value.trim();
+        let compIcon = document.getElementById("new-comp-icon").value.trim();
+        
+        if (!compName) return alert("企業名を入力してください。");
+        if (!compIcon) compIcon = "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=100";
+
+        const compId = "corp_" + new Date().getTime();
+
+        // 1. フロント側の名義一覧に承認なしで即時ガッチャンコ！
+        userProfiles.push({
+            id: compId,
+            name: compName,
+            icon: compIcon,
+            isCompany: true
+        });
+
+        // 2. スプシ側にも管理者承認をスルーして直接登録の通信を送る
+        try {
+            await fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({
+                    action: "updateProfile", // companiesシートへ直接書き込ませる
+                    id: compId,
+                    name: compName,
+                    iconUrl: compIcon,
+                    isCompany: true,
+                    userId: myUserId
+                })
+            });
+        } catch(e) {}
+
+        alert(`🏢 架空企業「${compName}」が即時設立されました！\n右上のプルダウンから切り替えて、今すぐニュースを配信できます！`);
+        
+        document.getElementById("new-comp-name").value = "";
+        document.getElementById("new-comp-icon").value = "";
+        renderIdentitySelect();
     }
 
     function publishNews() {
@@ -217,21 +248,6 @@
         const art = articles.find(a => a.id === artId);
         if(art) art.comments.push({ user: currentActiveProfile.name, text: text });
         input.value = "";
-        renderFeed();
-    }
-
-    async function toggleFollowUser(targetId) {
-        const idx = myFollowing.indexOf(targetId);
-        if(idx !== -1) myFollowing.splice(idx, 1);
-        else myFollowing.push(targetId);
-        
-        try {
-            await fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ action: "toggleFollow", userId: myUserId, targetId: targetId })
-            });
-        } catch(e) {}
         renderFeed();
     }
 
@@ -283,7 +299,7 @@
             const card = document.createElement("div");
             card.className = "article-card";
             const isFollowing = myFollowing.includes(art.authorId);
-            const followBtn = (art.authorId !== myUserId) ? `<button class="btn-secondary" onclick="toggleFollowUser('${art.authorId}')">${isFollowing ? '✓ フォロー中' : '＋ フォロー'}</button>` : '';
+            const followBtn = (art.authorId !== myUserId && !userProfiles.some(p => p.id === art.authorId)) ? `<button class="btn-secondary" onclick="toggleFollowUser('${art.authorId}')">${isFollowing ? '✓ フォロー中' : '＋ フォロー'}</button>` : '';
             const deleteBtn = (art.authorId === currentActiveProfile.id || currentActiveProfile.id === "tomidare1234") ? `<button class="btn-danger" onclick="deleteArticle('${art.id}')">削除</button>` : '';
             const tagsHtml = art.tags.map(t => `<span class="tag" onclick="clickTag('${t}')">#${t}</span>`).join("");
             const commentsHtml = art.comments.map(c => `<div class="comment"><span class="comment-user">${c.user}:</span><span>${c.text}</span></div>`).join("");
