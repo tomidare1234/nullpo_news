@@ -79,7 +79,7 @@
         
         <div id="guest-panel" class="guest-welcome-panel" style="display:none;">
             <h2>👋 nullpo newsへようこそ！</h2>
-            <p>nullpo newsでは、架空のインフラ鉄道・航空会社などのプレスリリースやニュースを配信しています。<br>新しく記事を投稿したり、自作の企業名義で配信するにはアカウントの申請登録が必要です。</p>
+            <p>nullpo newsでは、様々なプレスリリースやニュースを配信しています。<br>新しく記事を投稿したり、自作の企業名義で配信するにはアカウントの申請登録が必要です。</p>
             <button class="btn-login-trigger" style="background: white; color: #0052a3; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="goToLogin()">アカウント新規登録・ログイン画面へ</button>
         </div>
 
@@ -119,14 +119,12 @@
     </div>
 
 <script>
-    // index.htmlのログイン処理と完全に同期させる
     let myUserId = localStorage.getItem("loginUser"); 
     let myFollowing = [];
     let isGuest = !myUserId; 
 
     let userProfiles = [];
     
-    // ★バグ修正：ログインしている場合のみ、動的にログインIDを配列に注入する
     if (!isGuest) {
         userProfiles.push({ 
             id: myUserId, 
@@ -136,16 +134,22 @@
         });
     }
     
-    // プロファイルの初期参照も動的に割り当て
     let currentActiveProfile = userProfiles.length > 0 ? userProfiles[0] : null;
     let currentViewMode = "all";
     let searchWord = "";
-    let articles = [];
+    
+    // 💡 ★ニュース記事の配列をローカルストレージから自動で読み込む（無ければ空）
+    let articles = JSON.parse(localStorage.getItem("nullpo_articles")) || [];
 
     window.onload = function() {
         checkLoginStatus();
         renderFeed();
     };
+
+    // 💡 ★データをローカルストレージへセーブするための共通関数
+    function saveArticlesToStorage() {
+        localStorage.setItem("nullpo_articles", JSON.stringify(articles));
+    }
 
     function checkLoginStatus() {
         if (isGuest) {
@@ -302,6 +306,9 @@
         document.getElementById("art-title").value = "";
         document.getElementById("art-content").value = "";
         document.getElementById("art-tags").value = "";
+        
+        // 💡 ★記事をローカルストレージにセーブ
+        saveArticlesToStorage();
         renderFeed();
     }
 
@@ -309,6 +316,9 @@
         if(isGuest || !currentActiveProfile) return;
         if(!confirm("削除しますか？")) return;
         articles = articles.filter(art => art.id !== artId);
+        
+        // 💡 ★削除後のリストをローカルストレージにセーブ
+        saveArticlesToStorage();
         renderFeed();
     }
 
@@ -320,6 +330,9 @@
         const art = articles.find(a => a.id === artId);
         if(art) art.comments.push({ user: currentActiveProfile.name, text: text });
         input.value = "";
+        
+        // 💡 ★コメント追加後のリストをローカルストレージにセーブ
+        saveArticlesToStorage();
         renderFeed();
     }
 
