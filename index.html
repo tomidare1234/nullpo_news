@@ -143,22 +143,29 @@
         btn.textContent = text;
     }
 
-    // ログイン送信処理
-    function handleLoginSubmit(e) {
-        const uid = document.getElementById("login-id").value;
-        if(uid === "nullpo_tester") {
-            e.preventDefault();
-            localStorage.setItem("login", uid);
-            window.location.href = "top.html";
-            return;
-        }
-        
-        startLoading("btn-login-submit", "照合中");
-        setTimeout(() => {
-            localStorage.setItem("login", uid);
-            window.location.href = "top.html";
-        }, 1500);
+// 削除対象：if(uid === "nullpo_tester") { ... } のブロック
+// 変更後：
+async function handleLoginSubmit(e) {
+    e.preventDefault();
+    const uid = document.getElementById("login-id").value;
+    const pass = document.getElementById("login-pass").value;
+
+    startLoading("btn-login-submit", "照合中");
+
+    const response = await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "login", userId: uid, password: pass })
+    });
+    const result = await response.json();
+
+    if (result.success) {
+        localStorage.setItem("loginUser", uid);
+        window.location.href = "top.html";
+    } else {
+        alert(result.message);
+        stopLoading("btn-login-submit", "ログインする");
     }
+}
 
     // 新規申請送信処理
     function handleSignupSubmit(e) {
