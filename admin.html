@@ -3,144 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="config.js"></script>
     <title>nullpo news - 管理者ダッシュボード</title>
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f6f9; color: #333; margin: 0; padding: 20px; }
-        .admin-container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        header { border-bottom: 2px solid #0066cc; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { margin: 0; color: #0066cc; font-size: 24px; }
-        .refresh-btn { background: #666; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .refresh-btn:hover { background: #555; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f7f9; color: #333; margin: 0; padding: 20px; }
+        .admin-container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: #cc0000; font-size: 24px; border-bottom: 2px solid #cc0000; padding-bottom: 10px; margin-bottom: 20px; }
+        .refresh-btn { background: #555; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+        .refresh-btn:hover { background: #333; }
         
-        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #444; border-left: 4px solid #0066cc; padding-left: 10px; }
+        /* 申請リストのテーブルスタイル */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background: #f8f9fa; font-weight: bold; color: #555; }
+        tr:hover { background: #f9f9f9; }
         
-        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: #fff; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; color: #555; font-weight: bold; }
-        tr:hover { background-color: #fcfcfc; }
-        
-        .comment-text { background: #f9f9f9; padding: 6px 10px; border-radius: 4px; font-size: 14px; border-left: 3px solid #ccc; max-width: 400px; word-break: break-all; }
-        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; background: #ffeeba; color: #856404; }
-        
-        .btn-group { display: flex; gap: 8px; }
-        .btn { border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        .btn-approve { background-color: #28a745; color: white; }
-        .btn-approve:hover { background-color: #218838; }
-        .btn-reject { background-color: #dc3545; color: white; }
-        .btn-reject:hover { background-color: #c82333; }
-        
-        .no-data { text-align: center; color: #777; padding: 30px; font-style: italic; }
-        footer { text-align: center; margin-top: 40px; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 15px; }
+        .approve-btn { background: #00cc66; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .approve-btn:hover { background: #00994c; }
+        .no-data { text-align: center; color: #999; padding: 30px; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div class="admin-container">
-    <header>
-        <h1>nullpo news ⚙️ 管理画面</h1>
-        <button class="refresh-btn" onclick="fetchPendingUsers()">🔄 申請リストを更新</button>
-    </header>
-
-    <div class="section-title">ユーザー参加申請・承認管理</div>
+    <h1>nullpo news 管理者用ダッシュボード 🛠️</h1>
+    <p>新規ユーザーの参加申請の確認・承認が行えます。</p>
     
+    <button class="refresh-btn" onclick="fetchPendingUsers()">🔄 申請一覧を更新する</button>
+
     <table>
         <thead>
             <tr>
-                <th>ユーザーID</th>
+                <th>希望ユーザーID</th>
                 <th>メールアドレス</th>
-                <th>申請コメント</th>
-                <th>ステータス</th>
-                <th>アクション</th>
+                <th>申請メッセージ・自己紹介</th>
+                <th>操作</th>
             </tr>
         </thead>
-        <tbody id="pendingTableBody">
-            <tr>
-                <td colspan="5" class="no-data">申請リストを読み込み中...</td>
-            </tr>
-        </tbody>
+        <tbody id="pending-list">
+            </tbody>
     </table>
-
-    <footer>
-        ©nullpo tomidare1234
-    </footer>
 </div>
 
 <script>
-    // ⚠️ あなたのGASウェブアプリのURLをここに貼り付けてください
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwBbr0P_Kg51OqDHgFGxXMfwnAbvvFYGZ0ADfteOIs2E78Tk5ANiUnJE2ev6mlpdnuE/exec";
+    // 画面が開いたときに自動で申請リストを読み込む
+    window.onload = function() {
+        fetchPendingUsers();
+    };
 
-    // 1. 保留中（pending）のユーザーリストを取得して表示
+    // 承認待ちユーザー一覧を取得する処理
     async function fetchPendingUsers() {
-        const tbody = document.getElementById("pendingTableBody");
-        tbody.innerHTML = '<tr><td colspan="5" class="no-data">読み込み中...</td></tr>';
+        const tbody = document.getElementById("pending-list");
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">読み込み中...</td></tr>';
 
         try {
             const response = await fetch(GAS_URL, {
                 method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: JSON.stringify({ action: "getPending" })
             });
-            const data = await response.json();
 
-            tbody.innerHTML = ""; 
+            const pendingUsers = await response.json();
+            tbody.innerHTML = ""; // クリア
 
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="no-data">現在、保留中の申請はありません。</td></tr>';
+            if (!pendingUsers || pendingUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="no-data">現在、承認待ちの申請はありません。</td></tr>';
                 return;
             }
 
-            data.forEach(user => {
+            pendingUsers.forEach(user => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td><strong>${user.userId}</strong></td>
-                    <td>${user.email ? user.email : '<span style="color:#aaa;">(未入力)</span>'}</td>
-                    <td><div class="comment-text">${user.comment ? user.comment : '<span style="color:#aaa;">(コメントなし)</span>'}</div></td>
-                    <td><span class="status-badge">保留 (pending)</span></td>
+                    <td style="font-weight:bold;">${user.userId}</td>
+                    <td>${user.email || '<span style="color:#ccc;">未入力</span>'}</td>
+                    <td>${user.comment || '<span style="color:#ccc;">なし</span>'}</td>
                     <td>
-                        <div class="btn-group">
-                            <button class="btn btn-approve" onclick="processUser('${user.userId}', 'approve')">許可</button>
-                            <button class="btn btn-reject" onclick="processUser('${user.userId}', 'reject')">却下</button>
-                        </div>
+                        <button class="approve-btn" onclick="processUser('${user.userId}')">承認する</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
         } catch (error) {
-            console.error("エラー:", error);
-            tbody.innerHTML = '<tr><td colspan="5" class="no-data" style="color:red;">データの取得に失敗しました。URLの設定や再デプロイを確認してください。</td></tr>';
-        }
-    }
-
-    // 2. 許可ボタンが押された時の処理
-    async function processUser(userId, action) {
-        if (action === 'reject') {
-            alert("却下機能：今回はシンプルにするため、スプシから直接行を消すか、保留のままスルーでOKです！");
-            return;
-        }
-
-        if (!confirm(`「${userId}」の参加を【許可】しますか？`)) return;
-
-        try {
-            const response = await fetch(GAS_URL, {
-                method: "POST",
-                body: JSON.stringify({ 
-                    action: "approve", 
-                    userId: userId 
-                })
-            });
-            const result = await response.json();
-            
-            alert(result.message);
-            fetchPendingUsers(); // リスト更新
-            
-        } catch (error) {
-            alert("処理中にエラーが発生しました。");
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">データの取得に失敗しました。GASの設定を確認してください。</td></tr>';
             console.error(error);
         }
     }
 
-    // 起動時に自動実行
-    window.onload = fetchPendingUsers;
+    // ユーザーを承認する処理
+    async function processUser(userId) {
+        if (!confirm(`${userId} の参加申請を承認しますか？`)) return;
+
+        try {
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: JSON.stringify({
+                    action: "approve",
+                    userId: userId
+                })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            
+            // リストを再読み込み
+            fetchPendingUsers();
+
+        } catch (error) {
+            alert("承認処理中にエラーが発生しました。");
+            console.error(error);
+        }
+    }
 </script>
 </body>
 </html>
