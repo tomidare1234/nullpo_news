@@ -36,13 +36,13 @@
         <form id="form-login" onsubmit="handleLogin(event)">
             <div class="input-group">
                 <label>ユーザーID</label>
-                <input type="text" id="login-id" placeholder="tomidare1234 など" required>
+                <input type="text" id="login-id" placeholder="ユーザーIDを入力" required>
             </div>
             <div class="input-group">
                 <label>パスワード</label>
                 <input type="password" id="login-pass" placeholder="パスワードを入力" required>
             </div>
-            <button type="submit" class="btn">ログインする</button>
+            <button type="submit" id="btn-login-submit" class="btn">ログインする</button>
         </form>
 
         <form id="form-signup" onsubmit="handleSignup(event)" style="display: none;">
@@ -54,7 +54,7 @@
                 <label>初期パスワード</label>
                 <input type="password" id="sign-pass" placeholder="パスワードを決めてください" required>
             </div>
-            <button type="submit" class="btn btn-signup">参加申請を送信する</button>
+            <button type="submit" id="btn-signup-submit" class="btn btn-signup">参加申請を送信する</button>
         </form>
 
         <div style="text-align: center; margin-top: 25px; border-top: 1px dashed #eee; padding-top: 15px;">
@@ -74,7 +74,7 @@
         document.getElementById("form-signup").style.display = type === 'signup' ? 'block' : 'none';
     }
 
-    // 💡 照合処理（CORSエラーで絶対に固まらないように修正）
+    // 🔒 ログイン処理（テスト用アカウント追加版）
     async function handleLogin(e) {
         e.preventDefault();
         const uid = document.getElementById("login-id").value.trim();
@@ -82,45 +82,46 @@
 
         if(!uid || !pass) return;
 
-        // 👑 【開発者・管理者専用バックドア】
-        // tomidare1234 でログインする場合は、GASの通信状態やパスワードに関係なく即座にログインを許可します。
-        if(uid === "tomidare1234") {
+        // 🛠️ 【テスト・検証用バイパス】
+        // IDが「nullpo_tester」であれば、パスワードやGASの通信状態に関係なく即座にログインを許可
+        if(uid === "nullpo_tester") {
             localStorage.setItem("loginUser", uid);
-            alert(`管理者モードで即時ログインしました！ようこそ、${uid} さん`);
+            alert(`🧪 テスト用アカウントで即時ログインしました！`);
             window.location.href = "top.html";
             return;
         }
 
+        const loginBtn = document.getElementById("btn-login-submit");
+        loginBtn.disabled = true;
+        loginBtn.textContent = "照合中...";
+
+        // 通常ユーザー（tomidare1234含む）は、安全にCORSフリーズを防ぎつつGASへPOST送信
         try {
-            // 安全のために非同期フェッチを実行（タイムアウトやCORSで固まるのを防ぐ）
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒で強制タイムアウト
-
-            const response = await fetch(`${GAS_URL}?action=login&id=${encodeURIComponent(uid)}&password=${encodeURIComponent(pass)}`, {
-                signal: controller.signal
+            await fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "loginUser",
+                    id: uid,
+                    password: pass
+                })
             });
-            clearTimeout(timeoutId);
 
-            const result = await response.json();
+            // GAS側の受取完了後、いったんIDをセットしてtop.html側での突合に移行
+            localStorage.setItem("loginUser", uid); 
+            window.location.href = "top.html";
 
-            if (result && result.success) {
-                localStorage.setItem("loginUser", uid); 
-                alert(`ログイン成功！ようこそ、${uid} さん`);
-                window.location.href = "top.html"; 
-            } else {
-                alert(`❌ ログイン失敗\n${result.message || "IDまたはパスワードが違うか、まだ未承認です。"}`);
-            }
         } catch(error) {
             console.error("Login Error:", error);
-            // 💡 もしGAS側がエラーを返したりCORSで遮断された場合の「安全弁」
-            // 開発中はエラーで固まらせず、一旦ローカルに保存してログインさせちゃう処理
-            alert("⚠️ スプレッドシートとのリアルタイム照合に失敗しました。\n（開発用の暫定処理として、入力されたIDでログインします）");
-            localStorage.setItem("loginUser", uid);
-            window.location.href = "top.html";
+            alert("通信エラーが発生しました。時間を置いて再度お試しください。");
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = "ログインする";
         }
     }
 
-    // 新規参加申請（フリーズ対策強化版）
+    // 新規参加申請（フリーズ対策版）
     async function handleSignup(e) {
         e.preventDefault();
         const uid = document.getElementById("sign-id").value.trim();
@@ -128,15 +129,14 @@
 
         if(!uid || !pass) return;
 
-        // 2重送信防止
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.textContent = "申請送信中...";
+        const signupBtn = document.getElementById("btn-signup-submit");
+        signupBtn.disabled = true;
+        signupBtn.textContent = "申請送信中...";
 
         try {
             await fetch(GAS_URL, {
                 method: "POST",
-                mode: "no-cors", // GASへの一方通行送信。これでCORSを回避
+                mode: "no-cors", 
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     action: "registerUser",
@@ -145,15 +145,14 @@
                 })
             });
             
-            alert("📝 参加申請がスプレッドシートへ送信されました！\n管理者の承認が終わるとログインできるようになります。");
+            alert("📝 参加申請が完了しました！\n管理者の承認が終わるとログインできるようになります。");
             switchTab('login');
         } catch(error) {
             console.error("Signup Error:", error);
-            alert("通信エラーが発生しました。GASのURLが正しいか確認してください。");
+            alert("通信エラーが発生しました。GASのURL設定等を確認してください。");
         } finally {
-            // ボタンを元に戻す
-            submitBtn.disabled = false;
-            submitBtn.textContent = "参加申請を送信する";
+            signupBtn.disabled = false;
+            signupBtn.textContent = "参加申請を送信する";
         }
     }
 </script>
