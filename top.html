@@ -3,49 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="config.js"></script>
     <title>nullpo news - トップフィード</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 0; }
-        
-        /* ナビゲーションバー */
-        nav { background: #0066cc; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .logo { font-size: 20px; font-weight: bold; }
-        
-        /* 👑 名義切り替え（裏垢・企業アカウント）のセレクトボックス */
-        .profile-switcher { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; }
-        .profile-icon { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #ccc; }
-        select { background: transparent; color: white; border: none; font-size: 14px; font-weight: bold; cursor: pointer; outline: none; }
-        select option { color: #333; }
-
-        /* メインレイアウト */
-        .main-container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
-        
-        /* 📝 記事投稿フォーム（企業名義でも投稿可能にする土台） */
-        .post-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .post-box h3 { margin-top: 0; color: #444; font-size: 16px; }
-        input[type="text"], textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .post-btn { background: #0066cc; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; }
-        .post-btn:hover { background: #0052a3; }
+        nav { background: #0052a3; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 20px; font-weight: bold; letter-spacing: 1px; }
+        .profile-switcher { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.18); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); }
+        .profile-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        select { background: transparent; color: white; border: none; font-size: 14px; font-weight: bold; cursor: pointer; outline: none; padding-right: 5px; }
+        select option { color: #333; background: white; }
+        .main-container { max-width: 750px; margin: 30px auto; padding: 0 20px; }
+        .post-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .post-box h3 { margin-top: 0; color: #444; font-size: 15px; margin-bottom: 12px; }
+        input[type="text"], textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #f9f9f9; }
+        textarea { resize: vertical; height: 90px; }
+        .post-btn { background: #0052a3; color: white; border: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; }
         .clearfix::after { content: ""; clear: both; display: table; }
-
-        /* 📰 ニュース記事カード */
-        .article-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .article-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .author-name { font-weight: bold; color: #555; font-size: 14px; }
-        .article-title { font-size: 22px; font-weight: bold; margin: 0 0 10px 0; color: #111; }
+        .article-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .article-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .author-info { display: flex; flex-direction: column; }
+        .author-name { font-weight: bold; color: #333; font-size: 14px; }
+        .post-date { font-size: 11px; color: #999; margin-top: 2px; }
+        .article-title { font-size: 22px; font-weight: bold; margin: 0 0 12px 0; color: #111; line-height: 1.4; }
         .article-content { font-size: 15px; line-height: 1.6; color: #444; white-space: pre-wrap; }
-        
-        /* 💬 コメントセクション */
         .comment-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
-        .comment { background: #f8f9fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
-        .comment-author { font-weight: bold; color: #0066cc; font-size: 12px; margin-bottom: 3px; }
+        .comment { background: #f6f8fa; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border-left: 3px solid #0052a3; }
+        .comment-author { font-weight: bold; color: #0052a3; font-size: 12px; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
     <nav>
         <div class="logo">nullpo news 📰</div>
-        
         <div class="profile-switcher">
             <img id="current-icon" class="profile-icon" src="" alt="icon">
             <select id="identity-select" onchange="changeIdentity()">
@@ -54,75 +44,82 @@
     </nav>
 
     <div class="main-container">
-        
         <div class="post-box clearfix">
-            <h3>📰 新しいニュースを配信する</h3>
-            <input type="text" id="art-title" placeholder="記事のタイトル（例：【〇〇鉄道】新型車両を導入へ）">
+            <h3 id="post-box-title">👤 個人名義でニュースを配信する</h3>
+            <input type="text" id="art-title" placeholder="記事のタイトル">
             <textarea id="art-content" placeholder="ニュースの本文を入力..."></textarea>
-            <button class="post-btn" onclick="alert('記事投稿機能はデータベース連携を拡張したあとに動かします！')">ニュースを配信</button>
+            <button class="post-btn" onclick="publishNews()">ニュースを配信</button>
         </div>
 
         <div id="feed-container">
             <div class="article-card">
                 <div class="article-header">
-                    <img class="profile-icon" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" alt="icon">
-                    <div class="author-name">公式ニュース</div>
-                </div>
-                <h2 class="article-title">nullpo news ポータルへようこそ！</h2>
-                <div class="article-content">ここにスプレッドシートの「articles」シートに書き込まれた架空国家や架空企業のニュースがリアルタイムにずらりと並ぶようになります！</div>
-                
-                <div class="comment-section">
-                    <div class="comment">
-                        <div class="comment-author">tomidare1234</div>
-                        <div class="comment-text">ここに裏垢や企業名義を切り替えてコメントを残せるようになります。</div>
+                    <img class="profile-icon" src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=100" alt="icon">
+                    <div class="author-info">
+                        <div class="author-name">霧原急行電鉄 (公式)</div>
+                        <div class="post-date">2026-06-02 17:00</div>
                     </div>
                 </div>
+                <h2 class="article-title">【インフラ】霧原線（KR）の一部区間で自動高架化工事が完了</h2>
+                <div class="article-content">本日、新都市開発計画に伴う霧原線の一部区間において、高架化工事が完了したことをお知らせいたします。</div>
             </div>
         </div>
-
     </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwBbr0P_Kg51OqDHgFGxXMfwnAbvvFYGZ0ADfteOIs2E78Tk5ANiUnJE2ev6mlpdnuE/exec";
-    let userProfiles = [];
+    let userProfiles = [
+        { id: "tomidare1234", name: "tomidare1234", icon: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", isCompany: false },
+        { id: "corp_1", name: "霧原急行電鉄", icon: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=100", isCompany: true },
+        { id: "corp_2", name: "霞野航空", icon: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=100", isCompany: true }
+    ];
 
-    // 画面が開いたときに、ログイン情報を読み込む
+    let currentActiveProfile = userProfiles[0];
+
     window.onload = function() {
-        // ログイン画面（index.html）から送られてきたユーザーデータをチェック
-        const sessionData = localStorage.getItem("nullpo_session");
-        if (!sessionData) {
-            alert("ログインが必要です。");
-            window.location.href = "index.html";
-            return;
-        }
-
-        const user = JSON.parse(sessionData);
-        userProfiles = user.profiles; // 使える名義リスト（個人＋企業）
-
-        // セレクトボックスに名義を詰め込む
         const select = document.getElementById("identity-select");
+        select.innerHTML = "";
         userProfiles.forEach((prof, index) => {
             const opt = document.createElement("option");
             opt.value = index;
             opt.textContent = prof.isCompany ? `🏢 ${prof.name} 名義` : `👤 ${prof.name} (個人)`;
             select.appendChild(opt);
         });
-
-        // 初期アイコンのセット
         updateNavbarIcon(0);
     };
 
-    // セレクトボックスを変えたときにアイコンを切り替える（名義切り替え）
     function changeIdentity() {
         const selectedIndex = document.getElementById("identity-select").value;
+        currentActiveProfile = userProfiles[selectedIndex];
         updateNavbarIcon(selectedIndex);
-        const currentProf = userProfiles[selectedIndex];
-        alert(`アクティブな名義を「${currentProf.name}」に切り替えました！`);
+        const prefix = currentActiveProfile.isCompany ? "🏢" : "👤";
+        document.getElementById("post-box-title").textContent = `${prefix} ${currentActiveProfile.name} 名義でニュースを配信する`;
     }
 
     function updateNavbarIcon(index) {
-        const prof = userProfiles[index];
-        document.getElementById("current-icon").src = prof.icon || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100";
+        document.getElementById("current-icon").src = userProfiles[index].icon;
+    }
+
+    function publishNews() {
+        const title = document.getElementById("art-title").value.trim();
+        const content = document.getElementById("art-content").value.trim();
+        if (!title || !content) return alert("入力してください。");
+
+        const feed = document.getElementById("feed-container");
+        const card = document.createElement("div");
+        card.className = "article-card";
+        const prefix = currentActiveProfile.isCompany ? "🏢" : "👤";
+        
+        card.innerHTML = `
+            <div class="article-header">
+                <img class="profile-icon" src="${currentActiveProfile.icon}" alt="icon">
+                <div class="author-info"><div class="author-name">${prefix} ${currentActiveProfile.name}</div></div>
+            </div>
+            <h2 class="article-title">${title}</h2>
+            <div class="article-content">${content}</div>
+        `;
+        feed.insertBefore(card, feed.firstChild);
+        document.getElementById("art-title").value = "";
+        document.getElementById("art-content").value = "";
     }
 </script>
 </body>
