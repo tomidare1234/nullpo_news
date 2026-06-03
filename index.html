@@ -104,12 +104,27 @@
 
         startLoading("btn-login-submit", "照合中");
 
-        const response = await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "login", userId: uid, password: pass })
-        });
-        const result = await response.json();
+      // handleLoginSubmit の中身を以下に修正
+const response = await fetch(GAS_URL, {
+    method: "POST",
+    mode: "cors", // ★追加
+    headers: {
+        "Content-Type": "application/json" // ★追加
+    },
+    body: JSON.stringify({ action: "login", userId: uid, password: pass })
+});
+const result = await response.json();
 
+// handleSignupSubmit の中身も同様に修正
+const response = await fetch(GAS_URL, {
+    method: "POST",
+    mode: "cors", // ★追加
+    headers: {
+        "Content-Type": "application/json" // ★追加
+    },
+    body: JSON.stringify(payload)
+});
+const result = await response.json();
         if (result.success) {
             localStorage.setItem("loginUser", uid);
             window.location.href = "top.html";
