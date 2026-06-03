@@ -176,43 +176,39 @@ const response = await fetch(GAS_URL, {
             stopLoading("btn-signup-submit", "参加申請を送信する");
         }
     }
-</script>
     
+    // ここからがJavaScriptのプログラムだよ！とブラウザに教えてあげる
     async function handleSignupSubmit(e) {
-    e.preventDefault();
-    startLoading("btn-signup-submit", "送信中");
+        e.preventDefault();
+        startLoading("btn-signup-submit", "送信中");
 
-    const payload = {
-        action: "register",
-        userId: document.getElementById("sign-id").value,
-        password: document.getElementById("sign-pass").value,
-        email: document.getElementById("sign-email").value,
-        comment: document.getElementById("sign-comment").value
-    };
+        const payload = {
+            action: "register",
+            userId: document.getElementById("sign-id").value,
+            password: document.getElementById("sign-pass").value,
+            email: document.getElementById("sign-email").value,
+            comment: document.getElementById("sign-comment").value
+        };
 
-    try {
-        // ここが一番重要！「翻訳機」と会話するための正しい設定
-        const response = await fetch(GAS_URL, {
-            method: "POST",
-            mode: "cors", 
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
+        try {
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                mode: "cors", 
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
 
-        const result = await response.json();
-        
-        // 成功した場合
-        console.log("GASからの返事:", result);
-        alert("メッセージ: " + result.message);
-        switchTab('login');
-
-    } catch (err) {
-        console.error("通信エラー:", err);
-        alert("通信に失敗しました。コンソールを確認してください。");
-    } finally {
-        stopLoading("btn-signup-submit", "参加申請を送信する");
+            const result = await response.json();
+            console.log("GASからの返事:", result);
+            alert("メッセージ: " + result.message);
+            switchTab('login');
+        } catch (err) {
+            console.error("通信エラー:", err);
+            alert("通信に失敗しました。コンソールを確認してください。");
+        } finally {
+            stopLoading("btn-signup-submit", "参加申請を送信する");
+        }
     }
-}
 </script>
 </body>
 </html>
