@@ -104,36 +104,75 @@
 
         startLoading("btn-login-submit", "照合中");
 
-      // handleLoginSubmit の中身を以下に修正
-const response = await fetch(GAS_URL, {
-    method: "POST",
-    mode: "cors", // ★追加
-    headers: {
-        "Content-Type": "application/json" // ★追加
-    },
-    body: JSON.stringify({ action: "login", userId: uid, password: pass })
-});
-const result = await response.json();
+<script>
+    // ログイン処理
+    async function handleLoginSubmit(e) {
+        e.preventDefault();
+        const uid = document.getElementById("login-id").value;
+        const pass = document.getElementById("login-pass").value;
 
-// handleSignupSubmit の中身も同様に修正
-const response = await fetch(GAS_URL, {
-    method: "POST",
-    mode: "cors", // ★追加
-    headers: {
-        "Content-Type": "application/json" // ★追加
-    },
-    body: JSON.stringify(payload)
-});
-const result = await response.json();
-        if (result.success) {
-            localStorage.setItem("loginUser", uid);
-            window.location.href = "top.html";
-        } else {
-            alert(result.message);
+        startLoading("btn-login-submit", "照合中");
+
+        try {
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                mode: "cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "login", userId: uid, password: pass })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                localStorage.setItem("loginUser", uid);
+                window.location.href = "top.html";
+            } else {
+                alert(result.message);
+                stopLoading("btn-login-submit", "ログインする");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("通信エラー");
             stopLoading("btn-login-submit", "ログインする");
         }
     }
 
+    // 新規申請処理
+    async function handleSignupSubmit(e) {
+        e.preventDefault();
+        startLoading("btn-signup-submit", "送信中");
+
+        const payload = {
+            action: "register",
+            userId: document.getElementById("sign-id").value,
+            password: document.getElementById("sign-pass").value,
+            email: document.getElementById("sign-email").value,
+            comment: document.getElementById("sign-comment").value
+        };
+
+        try {
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                mode: "cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                alert("申請完了！");
+                switchTab('login');
+            } else {
+                alert("エラー: " + result.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("通信エラー");
+        } finally {
+            stopLoading("btn-signup-submit", "参加申請を送信する");
+        }
+    }
+</script>
+    
     async function handleSignupSubmit(e) {
         e.preventDefault();
         
