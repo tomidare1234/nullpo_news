@@ -49,7 +49,7 @@
 </div>
 
 <script>
-    window.onload = async () => {
+   window.onload = async () => {
         const uid = localStorage.getItem("loginUser");
         const guestMenu = document.getElementById("guest-menu");
         const userMenu = document.getElementById("user-menu");
@@ -59,18 +59,23 @@
             userMenu.style.display = "flex";
             document.getElementById("post-panel").style.display = "block";
             try {
-                const res = await fetch(GAS_URL + "?action=getSession&user=" + uid);
+                // 【修正箇所】GETからPOSTに変更
+                const res = await fetch(GAS_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "getSession", user: uid })
+                });
                 const u = await res.json();
+                
                 document.getElementById("u-icon").src = u.icon || "https://via.placeholder.com/40";
                 document.getElementById("u-name").textContent = u.name + (u.isCompany ? " 🏢" : " 👤");
-            } catch(e) { console.error("ユーザー取得失敗"); }
+            } catch(e) { console.error("ユーザー取得失敗", e); }
         } else {
             guestMenu.style.display = "flex";
             userMenu.style.display = "none";
         }
         loadArticles();
     };
-
+    
 // top.html 内の loadArticles 関数を以下のように変更
 async function loadArticles() {
     const feed = document.getElementById("feed");
@@ -109,11 +114,14 @@ async function loadArticles() {
 }
     async function toggleAcc() {
         const uid = localStorage.getItem("loginUser");
-        const res = await fetch(GAS_URL + "?action=toggleAccount&user=" + uid);
+        // 【修正箇所】POSTに変更
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "toggleAccount", user: uid })
+        });
         if ((await res.json()).success) location.reload();
         else alert("切り替え失敗");
     }
-
     async function publish() {
         const title = document.getElementById("art-title").value;
         const content = document.getElementById("art-content").value;
