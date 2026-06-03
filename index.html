@@ -168,16 +168,36 @@ async function handleLoginSubmit(e) {
 }
 
     // 新規申請送信処理
-    function handleSignupSubmit(e) {
-        startLoading("btn-signup-submit", "送信中");
-        
-        setTimeout(() => {
-            stopLoading("btn-signup-submit", "参加申請を送信する");
-            alert("📝 参加申請が送信されました！");
-            switchTab('login');
-        }, 1500);
-    }
-</script>
+async function handleSignupSubmit(e) {
+    e.preventDefault(); // フォームのデフォルト送信を止める
+    
+    const uid = document.getElementById("sign-id").value;
+    const pass = document.getElementById("sign-pass").value;
 
+    startLoading("btn-signup-submit", "送信中");
+
+    // GASへJSONデータを送信
+    const response = await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "register", // GAS側のswitch文に対応
+            userId: uid,        // GAS側の data.userId
+            password: pass,     // GAS側の data.password
+            email: "none",      // 今回はメールなしで送る
+            comment: "新規申請"  // コメント
+        })
+    });
+
+    const result = await response.json();
+    stopLoading("btn-signup-submit", "参加申請を送信する");
+
+    if (result.success) {
+        alert("📝 申請完了しました！承認をお待ちください。");
+        switchTab('login');
+    } else {
+        alert("エラー: " + result.message);
+    }
+}
+</script>
 </body>
 </html>
