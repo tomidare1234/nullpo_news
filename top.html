@@ -80,41 +80,57 @@
     }
 
     async function init() {
-        const session = await getSession();
-        if(session.loggedIn) {
-            document.getElementById("btn-login").style.display = "none";
-            document.getElementById("btn-logout").style.display = "block";
-            document.getElementById("post-panel").style.display = "block";
-        }
-
         const container = document.getElementById("feed-container");
-        const response = await fetch(GAS_URL + "?action=getArticles");
-        const articles = await response.json();
-        
-        container.innerHTML = "";
-        articles.forEach(art => {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.innerHTML = `
-                <div class="article-header">
-                    <div class="author-info">
-                        <img class="profile-icon" src="${art.authorIcon}">
-                        <span>${art.isCompany ? '🏢' : '👤'} ${art.authorName}</span>
-                    </div>
-                    ${art.isOwner ? '<button onclick="deleteArt(\''+art.id+'\')" class="btn" style="background:#fee2e2; color:#b91c1c;">削除</button>' : ''}
-                </div>
-                <h2 class="article-title">${art.title}</h2>
-                <p>${art.content}</p>
-                <div style="margin:15px 0;">${art.tags.map(t => `<span class="tag">#${t}</span>`).join('')}</div>
-                <div class="comment-section">
-                    <small>コメント (${art.commentCount})</small>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-    }
+        container.innerHTML = '<div class="spinner"></div>'; // 読み込み中にスピナーを表示
 
-    window.onload = init;
+        try {
+            // 通信を実行
+            const response = await fetch(GAS_URL + "?action=getArticles");
+            const articles = await response.json();
+            
+            console.log("GASから届いたデータ:", articles); // F12で確認用
+
+            // データがない場合の処理
+            if (!Array.isArray(articles) || articles.length === 0) {
+                container.innerHTML = "<p style='text-align:center;'>まだ記事がありません。</p>";
+                return;
+            }
+
+            container.innerHTML = ""; // スピナーを消す
+            
+            // 記事の描画処理
+            articles.forEach(art => {
+                const card = document.createElement("div");
+                card.className = "card";
+                
+                // データが存在するか安全に確認
+                const title = art.title || "タイトルなし";
+                const content = art.content || "";
+                const author = art.authorName || "名無し";
+                const icon = art.authorIcon || "https://via.placeholder.com/50";
+                const tags = Array.isArray(art.tags) ? art.tags.map(t => `<span class="tag">#${t}</span>`).join('') : "";
+
+                card.innerHTML = `
+                    <div class="article-header">
+                        <div class="author-info">
+                            <img class="profile-icon" src="${icon}">
+                            <span>${art.isCompany ? '🏢' : '👤'} ${author}</span>
+                        </div>
+                    </div>
+                    <h2 class="article-title">${title}</h2>
+                    <p>${content}</p>
+                    <div style="margin:15px 0;">${tags}</div>
+                    <div class="comment-section">
+                        <small>コメント (${art.commentCount || 0})</small>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        } catch(e) {
+            console.error("データ取得エラー:", e);
+            container.innerHTML = "<p style='color:red; text-align:center;'>読み込みに失敗しました: " + e.message + "</p>";
+        }
+    }
 </script>
 </body>
 </html>
