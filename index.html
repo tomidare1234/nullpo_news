@@ -105,37 +105,44 @@
         startLoading("btn-login-submit", "照合中");
 
 <script>
-    // ログイン処理
-    async function handleLoginSubmit(e) {
-        e.preventDefault();
-        const uid = document.getElementById("login-id").value;
-        const pass = document.getElementById("login-pass").value;
+async function handleLoginSubmit(e) {
+    e.preventDefault();
+    const uid = document.getElementById("login-id").value;
+    const pass = document.getElementById("login-pass").value;
 
-        startLoading("btn-login-submit", "照合中");
+    startLoading("btn-login-submit", "照合中");
 
+    try {
+        const response = await fetch(GAS_URL, {
+            method: "POST",
+            mode: "cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "login", userId: uid, password: pass })
+        });
+
+        // 通信が成功してデータが返ってきたかチェック
+        const text = await response.text(); // 一度テキストとして受け取る
         try {
-            const response = await fetch(GAS_URL, {
-                method: "POST",
-                mode: "cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "login", userId: uid, password: pass })
-            });
-            const result = await response.json();
-
+            const result = JSON.parse(text); // JSONに変換してみる
             if (result.success) {
                 localStorage.setItem("loginUser", uid);
                 window.location.href = "top.html";
             } else {
-                alert(result.message);
+                alert(result.message || "ログイン失敗");
                 stopLoading("btn-login-submit", "ログインする");
             }
-        } catch (err) {
-            console.error(err);
-            alert("通信エラー");
+        } catch (e) {
+            // JSONに変換できなかった場合＝GASがHTMLを返している証拠
+            console.error("GASからの返事がHTMLです:", text);
+            alert("エラー: サーバーから正しいデータが返ってきませんでした。");
             stopLoading("btn-login-submit", "ログインする");
         }
+    } catch (err) {
+        console.error(err);
+        alert("通信エラーが発生しました");
+        stopLoading("btn-login-submit", "ログインする");
     }
-
+}
     // 新規申請処理
     async function handleSignupSubmit(e) {
         e.preventDefault();
