@@ -7,51 +7,17 @@
     <title>nullpo news - ログイン・新規申請</title>
     
     <style>
-        /* 全体のレイアウト設定 */
-        body { 
-            font-family: 'Helvetica Neue', Arial, sans-serif; 
-            background: #eef2f5; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            padding: 20px; 
-            box-sizing: border-box; 
-        }
-
-        .login-box { 
-            background: white; 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            width: 100%; 
-            max-width: 400px; 
-            text-align: center; 
-        }
-
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
         h1 { color: #0052a3; margin: 0 0 5px 0; font-size: 28px; }
         p  { color: #666; font-size: 14px; margin-bottom: 30px; }
-
-        /* タブのスタイル */
         .tabs { display: flex; border-bottom: 2px solid #eef2f5; margin-bottom: 20px; }
         .tab { flex: 1; padding: 10px; cursor: pointer; color: #666; font-weight: bold; font-size: 14px; }
         .tab.active { color: #0052a3; border-bottom: 2px solid #0052a3; }
-
-        /* 入力フォームのスタイル */
         .input-group { margin-bottom: 20px; text-align: left; }
         label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #444; }
-        input[type="text"], input[type="password"] { 
-            width: 100%; padding: 10px; border: 1px solid #ddd; 
-            border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #f6f8fa; 
-        }
-
-        /* ボタンのスタイル */
-        .btn { 
-            background: #0052a3; color: white; border: none; padding: 12px; 
-            border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; width: 100%; 
-            transition: background 0.2s; margin-bottom: 10px;
-        }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #f6f8fa; }
+        .btn { background: #0052a3; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; width: 100%; transition: background 0.2s; margin-bottom: 10px; }
         .btn:hover { background: #004080; }
         .btn:disabled { background: #aab8c2; cursor: not-allowed; }
         .btn-signup { background: #28a745; }
@@ -71,52 +37,35 @@
             <div id="tab-signup" class="tab" onclick="switchTab('signup')">新規参加申請</div>
         </div>
 
-        <form id="form-login" method="POST" target="hidden_iframe" onsubmit="handleLoginSubmit(event)">
-            <input type="hidden" name="action" value="login">
-            
+        <form id="form-login" onsubmit="handleLoginSubmit(event)">
             <div class="input-group">
                 <label>ユーザーID</label>
-                <input type="text" name="id" id="login-id" placeholder="ユーザーID" required>
+                <input type="text" id="login-id" placeholder="ユーザーID" required>
             </div>
-            
             <div class="input-group">
                 <label>パスワード</label>
-                <input type="password" name="password" id="login-pass" placeholder="パスワード" required>
+                <input type="password" id="login-pass" placeholder="パスワード" required>
             </div>
-            
             <button type="submit" id="btn-login-submit" class="btn">ログインする</button>
             <button type="button" class="btn guest-btn" onclick="location.href='top.html'">ゲストとして見る</button>
         </form>
 
-        <form id="form-signup" method="POST" target="hidden_iframe" onsubmit="handleSignupSubmit(event)" style="display: none;">
-            <input type="hidden" name="action" value="register">
-            
+        <form id="form-signup" onsubmit="handleSignupSubmit(event)" style="display: none;">
             <div class="input-group">
                 <label>希望ユーザーID</label>
-                <input type="text" name="id" id="sign-id" placeholder="例: kirihara_p" required>
+                <input type="text" id="sign-id" placeholder="例: kirihara_p" required>
             </div>
-            
             <div class="input-group">
                 <label>初期パスワード</label>
-                <input type="password" name="password" id="sign-pass" placeholder="パスワード" required>
+                <input type="password" id="sign-pass" placeholder="パスワード" required>
             </div>
-            
             <button type="submit" id="btn-signup-submit" class="btn btn-signup">参加申請を送信する</button>
         </form>
         
         <div style="margin-top: 30px; font-size: 11px; color: #999;">©nullpo tomidare1234</div>
     </div>
 
-    <iframe name="hidden_iframe" style="display:none;"></iframe>
-
 <script>
-    // ページロード時の設定
-    window.onload = () => {
-        document.getElementById("form-login").action = GAS_URL;
-        document.getElementById("form-signup").action = GAS_URL;
-    };
-
-    // タブ切り替え機能
     function switchTab(type) {
         document.getElementById("tab-login").classList.toggle("active", type === 'login');
         document.getElementById("tab-signup").classList.toggle("active", type === 'signup');
@@ -124,7 +73,6 @@
         document.getElementById("form-signup").style.display = (type === 'signup') ? 'block' : 'none';
     }
 
-    // ローディングアニメーション開始
     function startLoading(btnId, text) {
         const btn = document.getElementById(btnId);
         btn.disabled = true;
@@ -135,7 +83,6 @@
         }, 500);
     }
 
-    // ローディングアニメーション停止
     function stopLoading(btnId, text) {
         const btn = document.getElementById(btnId);
         clearInterval(btn.dataset.interval);
@@ -143,61 +90,56 @@
         btn.textContent = text;
     }
 
-// 削除対象：if(uid === "nullpo_tester") { ... } のブロック
-// 変更後：
-async function handleLoginSubmit(e) {
-    e.preventDefault();
-    const uid = document.getElementById("login-id").value;
-    const pass = document.getElementById("login-pass").value;
+    async function handleLoginSubmit(e) {
+        e.preventDefault();
+        const uid = document.getElementById("login-id").value;
+        const pass = document.getElementById("login-pass").value;
 
-    startLoading("btn-login-submit", "照合中");
+        startLoading("btn-login-submit", "照合中");
 
-    const response = await fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "login", userId: uid, password: pass })
-    });
-    const result = await response.json();
+        const response = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "login", userId: uid, password: pass })
+        });
+        const result = await response.json();
 
-    if (result.success) {
-        localStorage.setItem("loginUser", uid);
-        window.location.href = "top.html";
-    } else {
-        alert(result.message);
-        stopLoading("btn-login-submit", "ログインする");
+        if (result.success) {
+            localStorage.setItem("loginUser", uid);
+            window.location.href = "top.html";
+        } else {
+            alert(result.message);
+            stopLoading("btn-login-submit", "ログインする");
+        }
     }
-}
 
-    // 新規申請送信処理
-async function handleSignupSubmit(e) {
-    e.preventDefault(); // フォームのデフォルト送信を止める
-    
-    const uid = document.getElementById("sign-id").value;
-    const pass = document.getElementById("sign-pass").value;
+    async function handleSignupSubmit(e) {
+        e.preventDefault();
+        const uid = document.getElementById("sign-id").value;
+        const pass = document.getElementById("sign-pass").value;
 
-    startLoading("btn-signup-submit", "送信中");
+        startLoading("btn-signup-submit", "送信中");
 
-    // GASへJSONデータを送信
-    const response = await fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
-            action: "register", // GAS側のswitch文に対応
-            userId: uid,        // GAS側の data.userId
-            password: pass,     // GAS側の data.password
-            email: "none",      // 今回はメールなしで送る
-            comment: "新規申請"  // コメント
-        })
-    });
+        const response = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "register",
+                userId: uid,
+                password: pass,
+                email: "",
+                comment: "新規申請"
+            })
+        });
 
-    const result = await response.json();
-    stopLoading("btn-signup-submit", "参加申請を送信する");
+        const result = await response.json();
+        stopLoading("btn-signup-submit", "参加申請を送信する");
 
-    if (result.success) {
-        alert("📝 申請完了しました！承認をお待ちください。");
-        switchTab('login');
-    } else {
-        alert("エラー: " + result.message);
+        if (result.success) {
+            alert("📝 申請完了しました！承認をお待ちください。");
+            switchTab('login');
+        } else {
+            alert("エラー: " + result.message);
+        }
     }
-}
 </script>
 </body>
 </html>
