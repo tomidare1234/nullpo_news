@@ -71,29 +71,42 @@
         loadArticles();
     };
 
-    async function loadArticles() {
-        const feed = document.getElementById("feed");
-        try {
-            const res = await fetch(GAS_URL + "?action=getArticles");
-            const data = await res.json();
+// top.html 内の loadArticles 関数を以下のように変更
+async function loadArticles() {
+    const feed = document.getElementById("feed");
+    try {
+        // GET ではなく POST に変更
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "getArticles" }) // action を JSON で送る
+        });
+        const result = await res.json();
+        
+        // 結果が success か確認
+        if (result.success) {
+            const data = result.articles;
             feed.innerHTML = data.map(a => `
                 <div class="card">
                     <div class="article-header">
                         <img class="profile-icon" src="${a.authorIcon || 'https://via.placeholder.com/50'}">
                         <span>${a.isCompany ? '🏢' : '👤'} 
-    <a href="profile.html?id=${a.authorId}" style="text-decoration:none; color:#0052a3;">
-        ${a.authorName}
-    </a>
-</span>
-
+                            <a href="profile.html?id=${a.authorId}" style="text-decoration:none; color:#0052a3;">
+                                ${a.authorName}
+                            </a>
+                        </span>
                     </div>
                     <h2>${a.title}</h2>
                     <p>${a.content}</p>
                 </div>
             `).join('');
-        } catch(e) { feed.innerHTML = "読み込みエラー"; }
+        } else {
+            feed.innerHTML = "読み込みエラー: " + result.message;
+        }
+    } catch(e) { 
+        console.error(e);
+        feed.innerHTML = "読み込みエラー"; 
     }
-
+}
     async function toggleAcc() {
         const uid = localStorage.getItem("loginUser");
         const res = await fetch(GAS_URL + "?action=toggleAccount&user=" + uid);
