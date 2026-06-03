@@ -48,16 +48,11 @@
 </div>
 
 <script>
-    // ログイン処理
-    async function login() {
-        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login" }) });
-        window.location.reload();
-    }
-
     // ログアウト処理
     async function logout() {
+        localStorage.removeItem("loginUser"); // ログイン情報を削除
         await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "logout" }) });
-        window.location.reload();
+        window.location.href = "index.html"; // ログイン画面へ戻る
     }
 
     // ニュース投稿処理
@@ -78,42 +73,48 @@
         });
     }
 
-    // 初期化関数
+    // ページ初期化
     async function init() {
-        const container = document.getElementById("feed-container");
-        
-        // 1. ログイン状態の確認とUI切り替え
-        try {
-            const sessionRes = await fetch(GAS_URL + "?action=getSession");
-            const session = await sessionRes.json();
-            if (session.loggedIn) {
-                document.getElementById("btn-login").style.display = "none";
-                document.getElementById("btn-logout").style.display = "block";
-                document.getElementById("post-panel").style.display = "block";
-            }
-        } catch (e) { console.error("セッション取得失敗:", e); }
+        // 1. ログインチェック (localStorageを使用)
+        const loggedInUser = localStorage.getItem("loginUser");
+        if (!loggedInUser) {
+            window.location.href = "index.html"; // ログイン画面へ
+            return;
+        }
 
-        // 2. 記事データの取得と描画
+        const container = document.getElementById("feed-container");
+        container.innerHTML = '<div class="spinner"></div>';
+
+        // 2. ログインしているならボタン等の表示切替
+        document.getElementById("btn-login").style.display = "none";
+        document.getElementById("btn-logout").style.display = "block";
+        document.getElementById("post-panel").style.display = "block";
+
+        // 3. 記事データの取得と描画
         try {
             const response = await fetch(GAS_URL + "?action=getArticles");
             const articles = await response.json();
             
+            container.innerHTML = "";
             if (!Array.isArray(articles) || articles.length === 0) {
                 container.innerHTML = "<p style='text-align:center;'>まだ記事がありません。</p>";
                 return;
             }
 
-            container.innerHTML = "";
             articles.forEach(art => {
                 const card = document.createElement("div");
                 card.className = "card";
+                
+                const authorName = art.authorName || "名無しさん";
+                const authorIcon = art.authorIcon || "https://via.placeholder.com/50";
+                const badge = art.isCompany ? '🏢' : '👤';
                 const tags = Array.isArray(art.tags) ? art.tags.map(t => `<span class="tag">#${t}</span>`).join('') : "";
                 
                 card.innerHTML = `
                     <div class="article-header">
                         <div class="author-info">
-                            <img class="profile-icon" src="${art.authorIcon || 'https://via.placeholder.com/50'}">
-                            <span>${art.isCompany ? '🏢' : '👤'} ${art.authorName || '名無し'}</span>
+                            <img class="profile-icon" src="${authorIcon}">
+                            <span>${badge} ${authorName}</span>
                         </div>
                     </div>
                     <h2 class="article-title">${art.title || "タイトルなし"}</h2>
