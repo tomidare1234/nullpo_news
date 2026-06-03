@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="config.js"></script>
     <title>nullpo news - ログイン・新規申請</title>
-    
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
         h1 { color: #0052a3; margin: 0 0 5px 0; font-size: 28px; }
-        p  { color: #666; font-size: 14px; margin-bottom: 30px; }
+        p { color: #666; font-size: 14px; margin-bottom: 30px; }
         .tabs { display: flex; border-bottom: 2px solid #eef2f5; margin-bottom: 20px; }
         .tab { flex: 1; padding: 10px; cursor: pointer; color: #666; font-weight: bold; font-size: 14px; }
         .tab.active { color: #0052a3; border-bottom: 2px solid #0052a3; }
@@ -25,17 +24,14 @@
         .guest-btn { background: #6c757d; }
     </style>
 </head>
-
 <body>
     <div class="login-box">
         <h1>nullpo news</h1>
         <p>ぬるぽにゅーす</p>
-        
         <div class="tabs">
             <div id="tab-login" class="tab active" onclick="switchTab('login')">ログイン</div>
             <div id="tab-signup" class="tab" onclick="switchTab('signup')">新規参加申請</div>
         </div>
-
         <form id="form-login" onsubmit="handleLoginSubmit(event)">
             <div class="input-group">
                 <label>ユーザーID</label>
@@ -48,7 +44,6 @@
             <button type="submit" id="btn-login-submit" class="btn">ログインする</button>
             <button type="button" class="btn guest-btn" onclick="location.href='top.html'">ゲストとして見る</button>
         </form>
-
         <form id="form-signup" onsubmit="handleSignupSubmit(event)" style="display: none;">
             <div class="input-group">
                 <label>希望ユーザーID</label>
@@ -68,18 +63,15 @@
             </div>
             <button type="submit" id="btn-signup-submit" class="btn btn-signup">参加申請を送信する</button>
         </form>
-        
         <div style="margin-top: 30px; font-size: 11px; color: #999;">©nullpo tomidare1234</div>
     </div>
-
-<script>
+    <script>
     function switchTab(type) {
         document.getElementById("tab-login").classList.toggle("active", type === 'login');
         document.getElementById("tab-signup").classList.toggle("active", type === 'signup');
         document.getElementById("form-login").style.display = (type === 'login') ? 'block' : 'none';
         document.getElementById("form-signup").style.display = (type === 'signup') ? 'block' : 'none';
     }
-
     function startLoading(btnId, text) {
         const btn = document.getElementById(btnId);
         btn.disabled = true;
@@ -89,40 +81,25 @@
             btn.textContent = text + ".".repeat(count);
         }, 500);
     }
-
     function stopLoading(btnId, text) {
         const btn = document.getElementById(btnId);
         clearInterval(btn.dataset.interval);
         btn.disabled = false;
         btn.textContent = text;
     }
-
     async function handleLoginSubmit(e) {
         e.preventDefault();
         const uid = document.getElementById("login-id").value;
         const pass = document.getElementById("login-pass").value;
-
         startLoading("btn-login-submit", "照合中");
-        
-async function handleLoginSubmit(e) {
-    e.preventDefault();
-    const uid = document.getElementById("login-id").value;
-    const pass = document.getElementById("login-pass").value;
-
-    startLoading("btn-login-submit", "照合中");
-
-    try {
-// ここを探して、中身をこう書き換えてください
-const response = await fetch(GAS_URL, {
-    method: "POST",
-    mode: "cors", // ★これが必要！
-    headers: { "Content-Type": "application/json" }, // ★これも必要！
-    body: JSON.stringify({ action: "login", userId: uid, password: pass })
-});
-        // 通信が成功してデータが返ってきたかチェック
-        const text = await response.text(); // 一度テキストとして受け取る
         try {
-            const result = JSON.parse(text); // JSONに変換してみる
+            const response = await fetch(GAS_URL, {
+                method: "POST",
+                mode: "cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "login", userId: uid, password: pass })
+            });
+            const result = await response.json();
             if (result.success) {
                 localStorage.setItem("loginUser", uid);
                 window.location.href = "top.html";
@@ -130,57 +107,15 @@ const response = await fetch(GAS_URL, {
                 alert(result.message || "ログイン失敗");
                 stopLoading("btn-login-submit", "ログインする");
             }
-        } catch (e) {
-            // JSONに変換できなかった場合＝GASがHTMLを返している証拠
-            console.error("GASからの返事がHTMLです:", text);
-            alert("エラー: サーバーから正しいデータが返ってきませんでした。");
-            stopLoading("btn-login-submit", "ログインする");
-        }
-    } catch (err) {
-        console.error(err);
-        alert("通信エラーが発生しました");
-        stopLoading("btn-login-submit", "ログインする");
-    }
-}
-    // 新規申請処理
-    async function handleSignupSubmit(e) {
-        e.preventDefault();
-        startLoading("btn-signup-submit", "送信中");
-
-        const payload = {
-            action: "register",
-            userId: document.getElementById("sign-id").value,
-            password: document.getElementById("sign-pass").value,
-            email: document.getElementById("sign-email").value,
-            comment: document.getElementById("sign-comment").value
-        };
-
-      // ここを探して、中身をこう書き換えてください
-const response = await fetch(GAS_URL, {
-    method: "POST",
-    mode: "cors", // ★これが必要！
-    headers: { "Content-Type": "application/json" }, // ★これも必要！
-    body: JSON.stringify(payload)
-});
-            if (result.success) {
-                alert("申請完了！");
-                switchTab('login');
-            } else {
-                alert("エラー: " + result.message);
-            }
         } catch (err) {
             console.error(err);
-            alert("通信エラー");
-        } finally {
-            stopLoading("btn-signup-submit", "参加申請を送信する");
+            alert("通信エラーが発生しました");
+            stopLoading("btn-login-submit", "ログインする");
         }
     }
-    
-    // ここからがJavaScriptのプログラムだよ！とブラウザに教えてあげる
     async function handleSignupSubmit(e) {
         e.preventDefault();
         startLoading("btn-signup-submit", "送信中");
-
         const payload = {
             action: "register",
             userId: document.getElementById("sign-id").value,
@@ -188,17 +123,14 @@ const response = await fetch(GAS_URL, {
             email: document.getElementById("sign-email").value,
             comment: document.getElementById("sign-comment").value
         };
-
         try {
             const response = await fetch(GAS_URL, {
                 method: "POST",
-                mode: "cors", 
+                mode: "cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
-
             const result = await response.json();
-            console.log("GASからの返事:", result);
             alert("メッセージ: " + result.message);
             switchTab('login');
         } catch (err) {
