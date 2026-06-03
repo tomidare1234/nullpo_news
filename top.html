@@ -73,24 +73,43 @@
         });
     }
 
-    // ページ初期化
+   // ページ初期化
     async function init() {
-        // 1. ログインチェック (localStorageを使用)
         const loggedInUser = localStorage.getItem("loginUser");
         if (!loggedInUser) {
-            window.location.href = "index.html"; // ログイン画面へ
+            window.location.href = "index.html";
             return;
         }
 
         const container = document.getElementById("feed-container");
         container.innerHTML = '<div class="spinner"></div>';
 
-        // 2. ログインしているならボタン等の表示切替
-        document.getElementById("btn-login").style.display = "none";
-        document.getElementById("btn-logout").style.display = "block";
-        document.getElementById("post-panel").style.display = "block";
+        // 1. ユーザー情報を取得してヘッダーを更新
+        try {
+            // ※GAS側で user=ID に対応した情報を返すようにしてください
+            const res = await fetch(GAS_URL + "?action=getSession&user=" + loggedInUser);
+            const user = await res.json(); 
 
-        // 3. 記事データの取得と描画
+            // ヘッダーの右側をアイコン＋名前に書き換え
+            const navRight = document.getElementById("nav-right");
+            navRight.innerHTML = `
+                <input type="text" id="search-box" class="search-box" placeholder="キーワード検索..." oninput="filterArticles()">
+                <div style="cursor:pointer; display:flex; align-items:center; background:rgba(255,255,255,0.1); padding:5px 15px; border-radius:20px;" 
+                     onclick="location.href='settings.html'">
+                    <img src="${user.icon || 'https://via.placeholder.com/35'}" style="width:35px; height:35px; border-radius:50%; margin-right:10px; border:2px solid #fff;">
+                    <span>${user.name || 'ユーザー'}</span>
+                </div>
+                <button class="btn" onclick="logout()">ログアウト</button>
+            `;
+            
+            // 投稿パネルを表示
+            document.getElementById("post-panel").style.display = "block";
+
+        } catch (e) {
+            console.error("ユーザー情報取得失敗:", e);
+        }
+
+        // 2. 記事データの取得と描画
         try {
             const response = await fetch(GAS_URL + "?action=getArticles");
             const articles = await response.json();
@@ -108,7 +127,6 @@
                 const authorName = art.authorName || "名無しさん";
                 const authorIcon = art.authorIcon || "https://via.placeholder.com/50";
                 const badge = art.isCompany ? '🏢' : '👤';
-                const tags = Array.isArray(art.tags) ? art.tags.map(t => `<span class="tag">#${t}</span>`).join('') : "";
                 
                 card.innerHTML = `
                     <div class="article-header">
@@ -119,10 +137,6 @@
                     </div>
                     <h2 class="article-title">${art.title || "タイトルなし"}</h2>
                     <p>${art.content || ""}</p>
-                    <div style="margin:15px 0;">${tags}</div>
-                    <div class="comment-section">
-                        <small>コメント (${art.commentCount || 0})</small>
-                    </div>
                 `;
                 container.appendChild(card);
             });
@@ -130,8 +144,6 @@
             container.innerHTML = "<p style='color:red; text-align:center;'>読み込みに失敗しました。</p>";
         }
     }
-
-    window.onload = init;
 </script>
 </body>
 </html>
