@@ -6,7 +6,6 @@
     <script src="config.js"></script>
     <title>nullpo news - 完全版ポータル</title>
     <style>
-        /* あなたが育ててきた450行クラスのスタイルをここに全て網羅します */
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 0; }
         nav { background: #0052a3; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .logo { font-size: 22px; font-weight: bold; cursor: pointer; }
@@ -31,7 +30,7 @@
     <div class="logo" onclick="window.location.reload()">nullpo news 📰</div>
     <div id="nav-right" class="nav-right">
         <input type="text" id="search-box" class="search-box" placeholder="キーワード検索..." oninput="filterArticles()">
-        <button id="btn-login" class="btn" onclick="location.href='index.html'">ログイン</button>
+        <button id="btn-login" class="btn" onclick="login()">ログイン</button>
         <button id="btn-logout" class="btn" style="display:none;" onclick="logout()">ログアウト</button>
     </div>
 </nav>
@@ -49,27 +48,27 @@
 </div>
 
 <script>
-    // サーバー通信で状態を管理する（localStorageを使用しない）
-    async function getSession() {
-        const res = await fetch(GAS_URL + "?action=getSession");
-        return await res.json();
-    }
-
-    async function logout() {
-        await fetch(GAS_URL + "?action=logout");
+    // ログイン処理
+    async function login() {
+        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login" }) });
         window.location.reload();
     }
 
+    // ログアウト処理
+    async function logout() {
+        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "logout" }) });
+        window.location.reload();
+    }
+
+    // ニュース投稿処理
     async function publishNews() {
         const title = document.getElementById("art-title").value;
         const content = document.getElementById("art-content").value;
-        await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "publishNews", title, content })
-        });
+        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "publishNews", title, content }) });
         window.location.reload();
     }
 
+    // 記事の検索機能
     function filterArticles() {
         const query = document.getElementById("search-box").value.toLowerCase();
         document.querySelectorAll(".card").forEach(card => {
@@ -79,46 +78,46 @@
         });
     }
 
+    // 初期化関数
     async function init() {
         const container = document.getElementById("feed-container");
-        container.innerHTML = '<div class="spinner"></div>'; // 読み込み中にスピナーを表示
-
+        
+        // 1. ログイン状態の確認とUI切り替え
         try {
-            // 通信を実行
+            const sessionRes = await fetch(GAS_URL + "?action=getSession");
+            const session = await sessionRes.json();
+            if (session.loggedIn) {
+                document.getElementById("btn-login").style.display = "none";
+                document.getElementById("btn-logout").style.display = "block";
+                document.getElementById("post-panel").style.display = "block";
+            }
+        } catch (e) { console.error("セッション取得失敗:", e); }
+
+        // 2. 記事データの取得と描画
+        try {
             const response = await fetch(GAS_URL + "?action=getArticles");
             const articles = await response.json();
             
-            console.log("GASから届いたデータ:", articles); // F12で確認用
-
-            // データがない場合の処理
             if (!Array.isArray(articles) || articles.length === 0) {
                 container.innerHTML = "<p style='text-align:center;'>まだ記事がありません。</p>";
                 return;
             }
 
-            container.innerHTML = ""; // スピナーを消す
-            
-            // 記事の描画処理
+            container.innerHTML = "";
             articles.forEach(art => {
                 const card = document.createElement("div");
                 card.className = "card";
-                
-                // データが存在するか安全に確認
-                const title = art.title || "タイトルなし";
-                const content = art.content || "";
-                const author = art.authorName || "名無し";
-                const icon = art.authorIcon || "https://via.placeholder.com/50";
                 const tags = Array.isArray(art.tags) ? art.tags.map(t => `<span class="tag">#${t}</span>`).join('') : "";
-
+                
                 card.innerHTML = `
                     <div class="article-header">
                         <div class="author-info">
-                            <img class="profile-icon" src="${icon}">
-                            <span>${art.isCompany ? '🏢' : '👤'} ${author}</span>
+                            <img class="profile-icon" src="${art.authorIcon || 'https://via.placeholder.com/50'}">
+                            <span>${art.isCompany ? '🏢' : '👤'} ${art.authorName || '名無し'}</span>
                         </div>
                     </div>
-                    <h2 class="article-title">${title}</h2>
-                    <p>${content}</p>
+                    <h2 class="article-title">${art.title || "タイトルなし"}</h2>
+                    <p>${art.content || ""}</p>
                     <div style="margin:15px 0;">${tags}</div>
                     <div class="comment-section">
                         <small>コメント (${art.commentCount || 0})</small>
@@ -127,10 +126,10 @@
                 container.appendChild(card);
             });
         } catch(e) {
-            console.error("データ取得エラー:", e);
-            container.innerHTML = "<p style='color:red; text-align:center;'>読み込みに失敗しました: " + e.message + "</p>";
+            container.innerHTML = "<p style='color:red; text-align:center;'>読み込みに失敗しました。</p>";
         }
     }
+
     window.onload = init;
 </script>
 </body>
