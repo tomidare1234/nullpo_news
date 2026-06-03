@@ -27,7 +27,6 @@
 </head>
 
 <body>
-
     <div class="login-box">
         <h1>nullpo news</h1>
         <p>ぬるぽにゅーす</p>
@@ -58,6 +57,14 @@
             <div class="input-group">
                 <label>初期パスワード</label>
                 <input type="password" id="sign-pass" placeholder="パスワード" required>
+            </div>
+            <div class="input-group">
+                <label>メールアドレス（任意）</label>
+                <input type="text" id="sign-email" placeholder="例: example@mail.com">
+            </div>
+            <div class="input-group">
+                <label>申請コメント（任意）</label>
+                <input type="text" id="sign-comment" placeholder="参加希望理由など">
             </div>
             <button type="submit" id="btn-signup-submit" class="btn btn-signup">参加申請を送信する</button>
         </form>
@@ -114,20 +121,21 @@
 
     async function handleSignupSubmit(e) {
         e.preventDefault();
-        const uid = document.getElementById("sign-id").value;
-        const pass = document.getElementById("sign-pass").value;
-
+        
         startLoading("btn-signup-submit", "送信中");
+
+        // 入力値を正しく取得
+        const payload = {
+            action: "register",
+            userId: document.getElementById("sign-id").value,
+            password: document.getElementById("sign-pass").value,
+            email: document.getElementById("sign-email").value,
+            comment: document.getElementById("sign-comment").value
+        };
 
         const response = await fetch(GAS_URL, {
             method: "POST",
-            body: JSON.stringify({
-                action: "register",
-                userId: uid,
-                password: pass,
-                email: "",
-                comment: "新規申請"
-            })
+            body: JSON.stringify(payload)
         });
 
         const result = await response.json();
