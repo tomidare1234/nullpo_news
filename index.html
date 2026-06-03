@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="config.js"></script>
     <title>nullpo news - ログイン・新規申請</title>
+    
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
@@ -24,14 +25,17 @@
         .guest-btn { background: #6c757d; }
     </style>
 </head>
+
 <body>
     <div class="login-box">
         <h1>nullpo news</h1>
         <p>ぬるぽにゅーす</p>
+        
         <div class="tabs">
             <div id="tab-login" class="tab active" onclick="switchTab('login')">ログイン</div>
             <div id="tab-signup" class="tab" onclick="switchTab('signup')">新規参加申請</div>
         </div>
+
         <form id="form-login" onsubmit="handleLoginSubmit(event)">
             <div class="input-group">
                 <label>ユーザーID</label>
@@ -44,6 +48,7 @@
             <button type="submit" id="btn-login-submit" class="btn">ログインする</button>
             <button type="button" class="btn guest-btn" onclick="location.href='top.html'">ゲストとして見る</button>
         </form>
+
         <form id="form-signup" onsubmit="handleSignupSubmit(event)" style="display: none;">
             <div class="input-group">
                 <label>希望ユーザーID</label>
@@ -65,13 +70,15 @@
         </form>
         <div style="margin-top: 30px; font-size: 11px; color: #999;">©nullpo tomidare1234</div>
     </div>
-    <script>
+
+<script>
     function switchTab(type) {
         document.getElementById("tab-login").classList.toggle("active", type === 'login');
         document.getElementById("tab-signup").classList.toggle("active", type === 'signup');
         document.getElementById("form-login").style.display = (type === 'login') ? 'block' : 'none';
         document.getElementById("form-signup").style.display = (type === 'signup') ? 'block' : 'none';
     }
+
     function startLoading(btnId, text) {
         const btn = document.getElementById(btnId);
         btn.disabled = true;
@@ -81,17 +88,20 @@
             btn.textContent = text + ".".repeat(count);
         }, 500);
     }
+
     function stopLoading(btnId, text) {
         const btn = document.getElementById(btnId);
         clearInterval(btn.dataset.interval);
         btn.disabled = false;
         btn.textContent = text;
     }
+
     async function handleLoginSubmit(e) {
         e.preventDefault();
         const uid = document.getElementById("login-id").value;
         const pass = document.getElementById("login-pass").value;
         startLoading("btn-login-submit", "照合中");
+
         try {
             const response = await fetch(GAS_URL, {
                 method: "POST",
@@ -113,6 +123,7 @@
             stopLoading("btn-login-submit", "ログインする");
         }
     }
+
     async function handleSignupSubmit(e) {
         e.preventDefault();
         startLoading("btn-signup-submit", "送信中");
@@ -123,6 +134,7 @@
             email: document.getElementById("sign-email").value,
             comment: document.getElementById("sign-comment").value
         };
+
         try {
             const response = await fetch(GAS_URL, {
                 method: "POST",
@@ -132,7 +144,7 @@
             });
             const result = await response.json();
             alert("メッセージ: " + result.message);
-            switchTab('login');
+            if (result.success) switchTab('login');
         } catch (err) {
             console.error("通信エラー:", err);
             alert("通信に失敗しました。コンソールを確認してください。");
