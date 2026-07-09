@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="config.js"></script>
-    <title>nullpo news - 完全版ポータル</title>
+    <title>nullpo news</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 0; }
         nav { background: #0052a3; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -16,6 +16,7 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .article-header { display: flex; align-items: center; margin-bottom: 20px; }
         .profile-icon { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; }
+        .author-name { color: #0052a3; }
     </style>
 </head>
 <body>
@@ -24,15 +25,16 @@
     <div class="logo" onclick="window.location.reload()">nullpo news 📰</div>
     <div id="nav-right" class="nav-right">
         <input type="text" id="search-box" placeholder="キーワード検索..." oninput="filterArticles()" style="padding:10px; border-radius:20px; border:none;">
-        
+
         <div id="guest-menu" style="display:none; gap:10px;">
-            <button class="btn" onclick="location.href='register.html'">新規登録</button>
+            <button class="btn" onclick="location.href='index.html'">新規登録</button>
             <button class="btn" onclick="location.href='index.html'">ログイン</button>
         </div>
 
         <div id="user-menu" style="display:none; align-items:center; gap:15px;">
+            <button id="admin-btn" class="btn" style="display:none;" onclick="location.href='admin.html'">管理者ダッシュボード</button>
             <img id="u-icon" style="width:40px; height:40px; border-radius:50%; cursor:pointer;" onclick="location.href='settings.html'">
-            <span id="u-name" style="font-weight:bold; cursor:pointer; text-decoration:underline;" onclick="toggleAcc()"></span>
+            <span id="u-name" style="font-weight:bold; cursor:pointer;"></span>
             <button class="btn" onclick="logout()">ログアウト</button>
         </div>
     </div>
@@ -49,95 +51,132 @@
 </div>
 
 <script>
-   window.onload = async () => {
-        const uid = localStorage.getItem("loginUser");
+    // HTMLエスケープ（XSS対策）
+    function escapeHtml(str) {
+        if (str === undefined || str === null) return "";
+        return String(str)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+    }
+
+    // ログイン中ユーザーの認証情報一式を取得。未ログインなら null。
+    function getAuth() {
+        const userId = localStorage.getItem("loginUser");
+        const token = localStorage.getItem("loginToken");
+        if (!userId || !token) return null;
+        return { userId, token };
+    }
+
+    // 管理者判定（簡易版：特定のuserIdのみ許可）
+    function isAdmin(userId) {
+        return userId === "admin";
+    }
+
+    window.onload = async () => {
+        const auth = getAuth();
         const guestMenu = document.getElementById("guest-menu");
         const userMenu = document.getElementById("user-menu");
 
-        if (uid) {
+        if (auth) {
             guestMenu.style.display = "none";
             userMenu.style.display = "flex";
             document.getElementById("post-panel").style.display = "block";
+            document.getElementById("admin-btn").style.display = isAdmin(auth.userId) ? "inline-block" : "none";
+
             try {
-                // 【修正箇所】GETからPOSTに変更
                 const res = await fetch(GAS_URL, {
                     method: "POST",
-                    body: JSON.stringify({ action: "getSession", user: uid })
+                    body: JSON.stringify({ action: "getSession", userId: auth.userId, token: auth.token })
                 });
                 const u = await res.json();
-                
+
+                if (!u.success) {
+                    // トークンが無効・期限切れ → ログインし直させる
+                    logout();
+                    return;
+                }
+
                 document.getElementById("u-icon").src = u.icon || "https://via.placeholder.com/40";
                 document.getElementById("u-name").textContent = u.name + (u.isCompany ? " 🏢" : " 👤");
-            } catch(e) { console.error("ユーザー取得失敗", e); }
+            } catch (e) {
+                console.error("ユーザー取得失敗", e);
+            }
         } else {
             guestMenu.style.display = "flex";
             userMenu.style.display = "none";
         }
         loadArticles();
     };
-    
-// top.html 内の loadArticles 関数を以下のように変更
-async function loadArticles() {
-    const feed = document.getElementById("feed");
-    try {
-        // GET ではなく POST に変更
-        const res = await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "getArticles" }) // action を JSON で送る
-        });
-        const result = await res.json();
-        
-        // 結果が success か確認
-        if (result.success) {
-            const data = result.articles;
-            feed.innerHTML = data.map(a => `
-                <div class="card">
-                    <div class="article-header">
-                        <img class="profile-icon" src="${a.authorIcon || 'https://via.placeholder.com/50'}">
-                        <span>${a.isCompany ? '🏢' : '👤'} 
-                            <a href="profile.html?id=${a.authorId}" style="text-decoration:none; color:#0052a3;">
-                                ${a.authorName}
-                            </a>
-                        </span>
+
+    async function loadArticles() {
+        const feed = document.getElementById("feed");
+        try {
+            const res = await fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "getArticles" })
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                const data = result.articles;
+                feed.innerHTML = data.map(a => `
+                    <div class="card">
+                        <div class="article-header">
+                            <img class="profile-icon" src="${escapeHtml(a.authorIcon || 'https://via.placeholder.com/50')}">
+                            <span>${a.isCompany ? '🏢' : '👤'}
+                                <span class="author-name">${escapeHtml(a.authorName)}</span>
+                            </span>
+                        </div>
+                        <h2>${escapeHtml(a.title)}</h2>
+                        <p>${escapeHtml(a.content)}</p>
                     </div>
-                    <h2>${a.title}</h2>
-                    <p>${a.content}</p>
-                </div>
-            `).join('');
-        } else {
-            feed.innerHTML = "読み込みエラー: " + result.message;
+                `).join('');
+            } else {
+                feed.innerHTML = "読み込みエラー: " + escapeHtml(result.message);
+            }
+        } catch (e) {
+            console.error(e);
+            feed.innerHTML = "読み込みエラー";
         }
-    } catch(e) { 
-        console.error(e);
-        feed.innerHTML = "読み込みエラー"; 
     }
-}
-    async function toggleAcc() {
-        const uid = localStorage.getItem("loginUser");
-        // 【修正箇所】POSTに変更
-        const res = await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "toggleAccount", user: uid })
-        });
-        if ((await res.json()).success) location.reload();
-        else alert("切り替え失敗");
-    }
+
     async function publish() {
+        const auth = getAuth();
+        if (!auth) {
+            alert("投稿にはログインが必要です。");
+            return;
+        }
         const title = document.getElementById("art-title").value;
         const content = document.getElementById("art-content").value;
-        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "publish", title, content }) });
+        if (!title.trim() || !content.trim()) {
+            alert("タイトルと本文を入力してください。");
+            return;
+        }
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "publish", userId: auth.userId, token: auth.token, title, content })
+        });
+        const result = await res.json();
+        if (!result.success) {
+            alert(result.message || "投稿に失敗しました");
+            return;
+        }
         location.reload();
     }
 
     function logout() {
         localStorage.removeItem("loginUser");
+        localStorage.removeItem("loginToken");
         location.href = "index.html";
     }
 
     function filterArticles() {
         const q = document.getElementById("search-box").value.toLowerCase();
         document.querySelectorAll(".card").forEach(c => {
-            if(c.id !== "post-panel") c.style.display = c.textContent.toLowerCase().includes(q) ? "block" : "none";
+            if (c.id !== "post-panel") c.style.display = c.textContent.toLowerCase().includes(q) ? "block" : "none";
         });
     }
 </script>
