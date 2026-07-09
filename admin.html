@@ -28,30 +28,62 @@
 </div>
 
 <script>
-    // ユーザー一覧取得
+    // HTMLエスケープ（XSS対策）
+    function escapeHtml(str) {
+        if (str === undefined || str === null) return "";
+        return String(str)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+    }
+
+    function getAuth() {
+        const userId = localStorage.getItem("loginUser");
+        const token = localStorage.getItem("loginToken");
+        if (!userId || !token) return null;
+        return { userId, token };
+    }
+
+    // 管理者チェック（簡易版：特定のuserIdのみ許可）。※フロント側のみのチェックであり、
+    // サーバー側でも別途トークン検証を行っているが、userId自体の権限チェックはしていない。
+    function requireAdmin() {
+        const auth = getAuth();
+        if (!auth || auth.userId !== "admin") {
+            alert("管理者権限がありません。");
+            location.href = "top.html";
+            return null;
+        }
+        return auth;
+    }
+
+    let currentAuth = null;
+
     async function loadPendingUsers() {
         const tbody = document.getElementById("user-list-body");
         try {
             const res = await fetch(GAS_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "getPending" })
+                body: JSON.stringify({ action: "getPending", userId: currentAuth.userId, token: currentAuth.token })
             });
             const result = await res.json();
+            if (!result.success) {
+                tbody.innerHTML = '<tr><td colspan="4">' + escapeHtml(result.message || "取得に失敗しました。") + '</td></tr>';
+                return;
+            }
             renderPendingUsers(result.users);
         } catch (e) {
             tbody.innerHTML = '<tr><td colspan="4">通信エラーが発生しました。</td></tr>';
         }
     }
 
-    // 承認処理
     async function approveUser(userId) {
         if (!confirm(`${userId} を承認しますか？`)) return;
 
         const res = await fetch(GAS_URL, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "approve", userId: userId })
+            body: JSON.stringify({ action: "approve", userId: currentAuth.userId, token: currentAuth.token, targetUserId: userId })
         });
         const result = await res.json();
         alert(result.message);
@@ -60,17 +92,24 @@
 
     function renderPendingUsers(users) {
         const tbody = document.getElementById("user-list-body");
+        if (!users.length) {
+            tbody.innerHTML = '<tr><td colspan="4">承認待ちのユーザーはいません。</td></tr>';
+            return;
+        }
         tbody.innerHTML = users.map(u => `
             <tr>
-                <td><b>${u.userId}</b></td>
-                <td>${u.email || '---'}</td>
-                <td>${u.comment || '---'}</td>
-                <td><button class="btn btn-approve" onclick="approveUser('${u.userId}')">承認する</button></td>
+                <td><b>${escapeHtml(u.userId)}</b></td>
+                <td>${escapeHtml(u.email || '---')}</td>
+                <td>${escapeHtml(u.comment || '---')}</td>
+                <td><button class="btn btn-approve" onclick="approveUser('${escapeHtml(u.userId)}')">承認する</button></td>
             </tr>
         `).join('');
     }
 
-    window.onload = loadPendingUsers;
+    window.onload = () => {
+        currentAuth = requireAdmin();
+        if (currentAuth) loadPendingUsers();
+    };
 </script>
 </body>
 </html>
