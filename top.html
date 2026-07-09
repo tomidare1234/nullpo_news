@@ -7,16 +7,21 @@
     <title>nullpo news</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #eef2f5; color: #333; margin: 0; padding: 0; }
+        /* ナビゲーションバー */
         nav { background: #0052a3; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .logo { font-size: 22px; font-weight: bold; cursor: pointer; }
         .nav-right { display: flex; align-items: center; gap: 15px; }
+        /* ボタン・パーツ */
         .btn { background: #fff; color: #0052a3; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .card { background: white; padding: 25px; margin: 20px auto; max-width: 800px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        /* スピナー・アニメーション */
         .spinner { width: 50px; height: 50px; border: 6px solid #f3f3f3; border-top: 6px solid #0052a3; border-radius: 50%; animation: spin 1s linear infinite; margin: 60px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        /* 記事レイアウト */
         .article-header { display: flex; align-items: center; margin-bottom: 20px; }
-        .profile-icon { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; }
-        .author-name { color: #0052a3; }
+        .profile-icon { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
+        .author-name { color: #0052a3; font-weight: bold; }
+        #search-box { padding: 10px; border-radius: 20px; border: none; width: 200px; }
     </style>
 </head>
 <body>
@@ -24,34 +29,39 @@
 <nav>
     <div class="logo" onclick="window.location.reload()">nullpo news 📰</div>
     <div id="nav-right" class="nav-right">
-        <input type="text" id="search-box" placeholder="キーワード検索..." oninput="filterArticles()" style="padding:10px; border-radius:20px; border:none;">
+        <input type="text" id="search-box" placeholder="キーワード検索..." oninput="filterArticles()">
 
+        <!-- 未ログイン時 -->
         <div id="guest-menu" style="display:none; gap:10px;">
             <button class="btn" onclick="location.href='index.html'">新規登録</button>
             <button class="btn" onclick="location.href='index.html'">ログイン</button>
         </div>
 
+        <!-- ログイン時 -->
         <div id="user-menu" style="display:none; align-items:center; gap:15px;">
-            <button id="admin-btn" class="btn" style="display:none;" onclick="location.href='admin.html'">管理者ダッシュボード</button>
+            <button id="admin-btn" class="btn" style="display:none;" onclick="location.href='admin.html'">管理</button>
             <img id="u-icon" style="width:40px; height:40px; border-radius:50%; cursor:pointer;" onclick="location.href='settings.html'">
-            <span id="u-name" style="font-weight:bold; cursor:pointer;"></span>
+            <span id="u-name" style="font-weight:bold; cursor:pointer;" onclick="location.href='settings.html'"></span>
             <button class="btn" onclick="logout()">ログアウト</button>
         </div>
     </div>
 </nav>
 
 <div style="max-width:800px; margin: 20px auto;">
+    <!-- 投稿パネル -->
     <div id="post-panel" class="card" style="display:none;">
         <h3>新しいニュースを投稿する</h3>
         <input type="text" id="art-title" placeholder="タイトル" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
         <textarea id="art-content" placeholder="本文" style="width:100%; height:100px; padding:10px; margin-bottom:10px; box-sizing:border-box;"></textarea>
         <button class="btn" onclick="publish()" style="width:100%; background:#0052a3; color:white;">投稿する</button>
     </div>
+    
+    <!-- 記事フィード -->
     <div id="feed"><div class="spinner"></div></div>
 </div>
 
 <script>
-    // HTMLエスケープ（XSS対策）
+    /** HTMLエスケープ機能 */
     function escapeHtml(str) {
         if (str === undefined || str === null) return "";
         return String(str)
@@ -62,19 +72,14 @@
             .replaceAll("'", "&#39;");
     }
 
-    // ログイン中ユーザーの認証情報一式を取得。未ログインなら null。
+    /** 認証情報取得 */
     function getAuth() {
         const userId = localStorage.getItem("loginUser");
         const token = localStorage.getItem("loginToken");
-        if (!userId || !token) return null;
-        return { userId, token };
+        return (userId && token) ? { userId, token } : null;
     }
 
-    // 管理者判定（簡易版：特定のuserIdのみ許可）
-    function isAdmin(userId) {
-        return userId === "admin";
-    }
-
+    /** 初期化処理 */
     window.onload = async () => {
         const auth = getAuth();
         const guestMenu = document.getElementById("guest-menu");
@@ -84,7 +89,7 @@
             guestMenu.style.display = "none";
             userMenu.style.display = "flex";
             document.getElementById("post-panel").style.display = "block";
-            document.getElementById("admin-btn").style.display = isAdmin(auth.userId) ? "inline-block" : "none";
+            document.getElementById("admin-btn").style.display = (auth.userId === "admin") ? "inline-block" : "none";
 
             try {
                 const res = await fetch(GAS_URL, {
@@ -92,92 +97,69 @@
                     body: JSON.stringify({ action: "getSession", userId: auth.userId, token: auth.token })
                 });
                 const u = await res.json();
-
-                if (!u.success) {
-                    // トークンが無効・期限切れ → ログインし直させる
+                if (u.success) {
+                    document.getElementById("u-icon").src = u.icon || "https://via.placeholder.com/40";
+                    document.getElementById("u-name").textContent = (u.name || auth.userId) + (u.isCompany ? " 🏢" : " 👤");
+                } else {
                     logout();
-                    return;
                 }
-
-                document.getElementById("u-icon").src = u.icon || "https://via.placeholder.com/40";
-                document.getElementById("u-name").textContent = u.name + (u.isCompany ? " 🏢" : " 👤");
-            } catch (e) {
-                console.error("ユーザー取得失敗", e);
-            }
+            } catch (e) { console.error("ユーザー取得失敗", e); }
         } else {
             guestMenu.style.display = "flex";
-            userMenu.style.display = "none";
         }
         loadArticles();
     };
 
+    /** 記事読み込み */
     async function loadArticles() {
         const feed = document.getElementById("feed");
         try {
-            const res = await fetch(GAS_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "getArticles" })
-            });
+            const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getArticles" }) });
             const result = await res.json();
-
             if (result.success) {
-                const data = result.articles;
-                feed.innerHTML = data.map(a => `
+                feed.innerHTML = result.articles.map(a => `
                     <div class="card">
                         <div class="article-header">
                             <img class="profile-icon" src="${escapeHtml(a.authorIcon || 'https://via.placeholder.com/50')}">
-                            <span>${a.isCompany ? '🏢' : '👤'}
-                                <span class="author-name">${escapeHtml(a.authorName)}</span>
-                            </span>
+                            <span>${a.isCompany ? '🏢' : '👤'} <span class="author-name">${escapeHtml(a.authorName || '名無しさん')}</span></span>
                         </div>
                         <h2>${escapeHtml(a.title)}</h2>
                         <p>${escapeHtml(a.content)}</p>
+                        <hr><small>タグ: ${escapeHtml(a.tags || 'なし')}</small>
                     </div>
                 `).join('');
             } else {
-                feed.innerHTML = "読み込みエラー: " + escapeHtml(result.message);
+                feed.innerHTML = "読み込みエラーが発生しました";
             }
-        } catch (e) {
-            console.error(e);
-            feed.innerHTML = "読み込みエラー";
-        }
+        } catch (e) { feed.innerHTML = "接続エラー"; }
     }
 
+    /** 投稿処理 */
     async function publish() {
         const auth = getAuth();
-        if (!auth) {
-            alert("投稿にはログインが必要です。");
-            return;
-        }
         const title = document.getElementById("art-title").value;
         const content = document.getElementById("art-content").value;
-        if (!title.trim() || !content.trim()) {
-            alert("タイトルと本文を入力してください。");
-            return;
-        }
+        if (!title || !content) { alert("タイトルと本文を入力してください"); return; }
+        
         const res = await fetch(GAS_URL, {
             method: "POST",
             body: JSON.stringify({ action: "publish", userId: auth.userId, token: auth.token, title, content })
         });
-        const result = await res.json();
-        if (!result.success) {
-            alert(result.message || "投稿に失敗しました");
-            return;
-        }
-        location.reload();
+        if ((await res.json()).success) location.reload();
     }
 
-    function logout() {
-        localStorage.removeItem("loginUser");
-        localStorage.removeItem("loginToken");
-        location.href = "index.html";
-    }
-
+    /** 検索フィルタ機能 */
     function filterArticles() {
         const q = document.getElementById("search-box").value.toLowerCase();
         document.querySelectorAll(".card").forEach(c => {
             if (c.id !== "post-panel") c.style.display = c.textContent.toLowerCase().includes(q) ? "block" : "none";
         });
+    }
+
+    /** ログアウト */
+    function logout() {
+        localStorage.clear();
+        location.href = "index.html";
     }
 </script>
 </body>
