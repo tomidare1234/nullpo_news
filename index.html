@@ -106,12 +106,12 @@
             const response = await fetch(GAS_URL, {
                 method: "POST",
                 mode: "cors",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ action: "login", userId: uid, password: pass })
             });
             const result = await response.json();
             if (result.success) {
-                localStorage.setItem("loginUser", uid);
+                localStorage.setItem("loginUser", result.userId);
+                localStorage.setItem("loginToken", result.token);
                 window.location.href = "top.html";
             } else {
                 alert(result.message || "ログイン失敗");
@@ -139,7 +139,6 @@
             const response = await fetch(GAS_URL, {
                 method: "POST",
                 mode: "cors",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
             const result = await response.json();
