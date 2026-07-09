@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>プロフィール設定 - nullpo news</title>
+    <title>nullpo news-アカウント設定</title>
     <script src="config.js"></script>
     <style>
         body { font-family: sans-serif; background: #eef2f5; padding: 20px; }
@@ -10,6 +10,7 @@
         .input-group { margin-bottom: 15px; }
         input, textarea { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; }
         .btn { background: #0052a3; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; }
+        hr { margin: 30px 0; border: 0; border-top: 1px solid #eee; }
     </style>
 </head>
 <body>
@@ -25,73 +26,85 @@
         <input type="text" id="edit-icon">
     </div>
     <div class="input-group">
-        <label>企業/自己紹介 (プロフィール文)</label>
+        <label>自己紹介 (プロフィール文)</label>
         <textarea id="edit-bio" rows="3"></textarea>
     </div>
-
     <button class="btn" onclick="saveSettings()">保存して戻る</button>
+
+    <hr>
+    <h3>企業を登録する</h3>
+    <div class="input-group">
+        <label>企業ID</label>
+        <input type="text" id="comp-id" placeholder="例: ntk">
+    </div>
+    <div class="input-group">
+        <label>企業名</label>
+        <input type="text" id="comp-name" placeholder="例: Nanakiri Broadcasting">
+    </div>
+    <button class="btn" style="background:#28a745;" onclick="registerCompany()">企業を新規登録する</button>
 </div>
 
 <script>
     function getAuth() {
         const userId = localStorage.getItem("loginUser");
         const token = localStorage.getItem("loginToken");
-        if (!userId || !token) return null;
-        return { userId, token };
+        return (userId && token) ? { userId, token } : null;
     }
 
     window.onload = async () => {
         const auth = getAuth();
-        if (!auth) {
-            location.href = "index.html";
-            return;
-        }
+        if (!auth) { location.href = "index.html"; return; }
+        
         try {
             const res = await fetch(GAS_URL, {
                 method: "POST",
                 body: JSON.stringify({ action: "getSession", userId: auth.userId, token: auth.token })
             });
             const user = await res.json();
-            if (!user.success) {
-                alert("セッションが切れました。再ログインしてください。");
-                location.href = "index.html";
-                return;
-            }
-            document.getElementById("edit-name").value = user.name;
+            if (!user.success) { alert("再ログインしてください。"); location.href = "index.html"; return; }
+            document.getElementById("edit-name").value = user.userId;
             document.getElementById("edit-icon").value = user.icon || "";
             document.getElementById("edit-bio").value = user.bio || "";
-        } catch (e) {
-            console.error(e);
-            alert("読み込みに失敗しました");
-        }
+        } catch (e) { alert("読み込み失敗"); }
     };
 
     async function saveSettings() {
         const auth = getAuth();
-        if (!auth) {
-            location.href = "index.html";
-            return;
-        }
-        try {
-            const res = await fetch(GAS_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "updateUser",
-                    userId: auth.userId,
-                    token: auth.token,
-                    icon: document.getElementById("edit-icon").value,
-                    bio: document.getElementById("edit-bio").value
-                })
-            });
-            const result = await res.json();
-            if (!result.success) {
-                alert(result.message || "保存に失敗しました");
-                return;
-            }
-            location.href = "top.html";
-        } catch (e) {
-            console.error(e);
-            alert("通信エラーが発生しました");
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "updateUser",
+                userId: auth.userId,
+                token: auth.token,
+                icon: document.getElementById("edit-icon").value,
+                bio: document.getElementById("edit-bio").value
+            })
+        });
+        const result = await res.json();
+        if (result.success) location.href = "top.html";
+        else alert(result.message);
+    }
+
+    async function registerCompany() {
+        const auth = getAuth();
+        const payload = {
+            action: "registerCompany",
+            userId: auth.userId,
+            token: auth.token,
+            companyId: document.getElementById("comp-id").value,
+            companyName: document.getElementById("comp-name").value,
+            managerId: auth.userId
+        };
+
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        alert(result.message);
+        if (result.success) {
+            document.getElementById("comp-id").value = "";
+            document.getElementById("comp-name").value = "";
         }
     }
 </script>
