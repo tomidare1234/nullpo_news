@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>nullpo news-アカウント設定</title>
+    <title>設定 - nullpo news</title>
     <script src="config.js"></script>
     <style>
         body { font-family: sans-serif; background: #eef2f5; padding: 20px; }
@@ -10,6 +10,7 @@
         .input-group { margin-bottom: 15px; }
         input, textarea { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; }
         .btn { background: #0052a3; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-danger { background: #dc3545; }
         hr { margin: 30px 0; border: 0; border-top: 1px solid #eee; }
     </style>
 </head>
@@ -18,30 +19,31 @@
 <div class="card">
     <h2>プロフィール設定</h2>
     <div class="input-group">
-        <label>表示名</label>
-        <input type="text" id="edit-name" disabled>
+        <label>表示名 (名前)</label>
+        <input type="text" id="edit-name">
     </div>
     <div class="input-group">
         <label>アイコン画像URL</label>
         <input type="text" id="edit-icon">
     </div>
     <div class="input-group">
-        <label>自己紹介 (プロフィール文)</label>
+        <label>自己紹介文</label>
         <textarea id="edit-bio" rows="3"></textarea>
     </div>
     <button class="btn" onclick="saveSettings()">保存して戻る</button>
 
     <hr>
-    <h3>企業を登録する</h3>
+    <h3>企業管理</h3>
     <div class="input-group">
-        <label>企業ID</label>
+        <label>企業ID (登録・削除用)</label>
         <input type="text" id="comp-id" placeholder="例: ntk">
     </div>
     <div class="input-group">
-        <label>企業名</label>
+        <label>企業名 (登録のみ)</label>
         <input type="text" id="comp-name" placeholder="例: Nanakiri Broadcasting">
     </div>
-    <button class="btn" style="background:#28a745;" onclick="registerCompany()">企業を新規登録する</button>
+    <button class="btn" style="background:#28a745;" onclick="registerCompany()">企業を新規登録</button>
+    <button class="btn btn-danger" onclick="deleteCompany()">登録した企業を削除</button>
 </div>
 
 <script>
@@ -55,31 +57,29 @@
         const auth = getAuth();
         if (!auth) { location.href = "index.html"; return; }
         
-        try {
-            const res = await fetch(GAS_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "getSession", userId: auth.userId, token: auth.token })
-            });
-            const user = await res.json();
-            if (!user.success) { alert("再ログインしてください。"); location.href = "index.html"; return; }
-            document.getElementById("edit-name").value = user.userId;
-            document.getElementById("edit-icon").value = user.icon || "";
-            document.getElementById("edit-bio").value = user.bio || "";
-        } catch (e) { alert("読み込み失敗"); }
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "getSession", userId: auth.userId, token: auth.token })
+        });
+        const user = await res.json();
+        if (!user.success) { alert("再ログインしてください"); location.href = "index.html"; return; }
+        
+        document.getElementById("edit-name").value = user.userName || "";
+        document.getElementById("edit-icon").value = user.icon || "";
+        document.getElementById("edit-bio").value = user.bio || "";
     };
 
     async function saveSettings() {
         const auth = getAuth();
-        const res = await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                action: "updateUser",
-                userId: auth.userId,
-                token: auth.token,
-                icon: document.getElementById("edit-icon").value,
-                bio: document.getElementById("edit-bio").value
-            })
-        });
+        const payload = {
+            action: "updateUser",
+            userId: auth.userId,
+            token: auth.token,
+            userName: document.getElementById("edit-name").value,
+            icon: document.getElementById("edit-icon").value,
+            bio: document.getElementById("edit-bio").value
+        };
+        const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
         const result = await res.json();
         if (result.success) location.href = "top.html";
         else alert(result.message);
@@ -87,25 +87,35 @@
 
     async function registerCompany() {
         const auth = getAuth();
-        const payload = {
-            action: "registerCompany",
-            userId: auth.userId,
-            token: auth.token,
-            companyId: document.getElementById("comp-id").value,
-            companyName: document.getElementById("comp-name").value,
-            managerId: auth.userId
-        };
-
         const res = await fetch(GAS_URL, {
             method: "POST",
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                action: "registerCompany",
+                userId: auth.userId,
+                token: auth.token,
+                companyId: document.getElementById("comp-id").value,
+                companyName: document.getElementById("comp-name").value,
+                managerId: auth.userId
+            })
         });
         const result = await res.json();
         alert(result.message);
-        if (result.success) {
-            document.getElementById("comp-id").value = "";
-            document.getElementById("comp-name").value = "";
-        }
+    }
+
+    async function deleteCompany() {
+        if(!confirm("本当にこの企業を削除しますか？")) return;
+        const auth = getAuth();
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "deleteCompany",
+                userId: auth.userId,
+                token: auth.token,
+                companyId: document.getElementById("comp-id").value
+            })
+        });
+        const result = await res.json();
+        alert(result.message);
     }
 </script>
 </body>
