@@ -18,7 +18,7 @@
     <h2>プロフィール設定</h2>
     <div class="input-group">
         <label>表示名</label>
-        <input type="text" id="edit-name">
+        <input type="text" id="edit-name" disabled>
     </div>
     <div class="input-group">
         <label>アイコン画像URL</label>
@@ -28,33 +28,71 @@
         <label>企業/自己紹介 (プロフィール文)</label>
         <textarea id="edit-bio" rows="3"></textarea>
     </div>
-    
+
     <button class="btn" onclick="saveSettings()">保存して戻る</button>
 </div>
 
 <script>
+    function getAuth() {
+        const userId = localStorage.getItem("loginUser");
+        const token = localStorage.getItem("loginToken");
+        if (!userId || !token) return null;
+        return { userId, token };
+    }
+
     window.onload = async () => {
-        const uid = localStorage.getItem("loginUser");
-        const res = await fetch(GAS_URL + "?action=getSession&user=" + uid);
-        const user = await res.json();
-        document.getElementById("edit-name").value = user.name;
-        document.getElementById("edit-icon").value = user.icon || "";
-        document.getElementById("edit-bio").value = user.bio || "";
+        const auth = getAuth();
+        if (!auth) {
+            location.href = "index.html";
+            return;
+        }
+        try {
+            const res = await fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "getSession", userId: auth.userId, token: auth.token })
+            });
+            const user = await res.json();
+            if (!user.success) {
+                alert("セッションが切れました。再ログインしてください。");
+                location.href = "index.html";
+                return;
+            }
+            document.getElementById("edit-name").value = user.name;
+            document.getElementById("edit-icon").value = user.icon || "";
+            document.getElementById("edit-bio").value = user.bio || "";
+        } catch (e) {
+            console.error(e);
+            alert("読み込みに失敗しました");
+        }
     };
 
     async function saveSettings() {
-        const uid = localStorage.getItem("loginUser");
-        await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({ 
-                action: "updateUser", 
-                user: uid, 
-                name: document.getElementById("edit-name").value,
-                icon: document.getElementById("edit-icon").value,
-                bio: document.getElementById("edit-bio").value
-            })
-        });
-        location.href = "top.html";
+        const auth = getAuth();
+        if (!auth) {
+            location.href = "index.html";
+            return;
+        }
+        try {
+            const res = await fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "updateUser",
+                    userId: auth.userId,
+                    token: auth.token,
+                    icon: document.getElementById("edit-icon").value,
+                    bio: document.getElementById("edit-bio").value
+                })
+            });
+            const result = await res.json();
+            if (!result.success) {
+                alert(result.message || "保存に失敗しました");
+                return;
+            }
+            location.href = "top.html";
+        } catch (e) {
+            console.error(e);
+            alert("通信エラーが発生しました");
+        }
     }
 </script>
 </body>
